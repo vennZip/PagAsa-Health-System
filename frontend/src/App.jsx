@@ -6,6 +6,7 @@ import PatientDashboard from "./pages/PatientDashboard";
 import PatientProfile from "./pages/PatientProfile";
 import MyProfile from "./pages/MyProfile";
 import EditProfile from "./pages/EditProfile";
+import AccountSettings from "./pages/AccountSettings";
 import Appointments from "./pages/Appointments";
 import StaffAppointments from "./pages/StaffAppointments";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -104,6 +105,15 @@ function AppContent() {
 />
 
       {/* Patient Profile */}
+      <Route
+        path="/account-settings"
+        element={
+          <ProtectedRoute allowedRoles={["patient", "staff", "admin"]}>
+            <AccountSettings />
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="/profile"
         element={

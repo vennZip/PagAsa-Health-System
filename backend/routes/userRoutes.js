@@ -3,6 +3,7 @@ import express from "express";
 import {
   registerUser,
   getCurrentUser,
+  updateMyEmail,
   getAllUsers,
   updateUserRole,
   updateUserStatus
@@ -26,6 +27,12 @@ router.get(
   "/me",
   protect,
   getCurrentUser
+);
+
+router.patch(
+  "/me/email",
+  verifyFirebaseToken,
+  updateMyEmail
 );
 
 // Get all registered users (Admin only)

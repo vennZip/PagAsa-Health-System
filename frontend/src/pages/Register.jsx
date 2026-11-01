@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
@@ -16,6 +16,8 @@ function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const fullNameInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -32,6 +34,12 @@ function Register() {
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
+      setFormData((current) => ({
+        ...current,
+        password: "",
+        confirmPassword: ""
+      }));
+      passwordInputRef.current?.focus();
       return;
     }
 
@@ -48,6 +56,13 @@ function Register() {
 
     } catch (err) {
       setError(err.message);
+      setFormData({
+        fullName: "",
+        email: "",
+        password: "",
+        confirmPassword: ""
+      });
+      fullNameInputRef.current?.focus();
     } finally {
       setLoading(false);
     }
@@ -62,6 +77,7 @@ function Register() {
         <div>
           <label>Full Name</label>
           <input
+            ref={fullNameInputRef}
             type="text"
             name="fullName"
             value={formData.fullName}
@@ -84,6 +100,7 @@ function Register() {
         <div>
           <label>Password</label>
           <input
+            ref={passwordInputRef}
             type="password"
             name="password"
             value={formData.password}

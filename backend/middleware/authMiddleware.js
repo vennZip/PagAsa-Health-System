@@ -34,6 +34,27 @@ const protect = async (req, res, next) => {
       });
     }
 
+    // Firebase applies email changes only after the user opens its
+    // verification link. Keep the local profile synchronized afterward.
+    const firebaseEmail = decodedToken.email?.trim().toLowerCase();
+
+    if (firebaseEmail && firebaseEmail !== user.email) {
+      const emailOwner = await User.findOne({
+        email: firebaseEmail,
+        _id: { $ne: user._id }
+      });
+
+      if (emailOwner) {
+        return res.status(409).json({
+          success: false,
+          message: "The verified email is already used by another account."
+        });
+      }
+
+      user.email = firebaseEmail;
+      await user.save();
+    }
+
     // Check whether the account is active
     if (user.status !== "active") {
       return res.status(403).json({

@@ -16,6 +16,7 @@ const navigation = [
   ["Notifications", "/notifications", "bell", ["admin", "staff", "patient"]],
   ["Activity Logs", "/activity-logs", "logs", ["admin"]],
   ["Reports", "/reports", "reports", ["admin"]],
+  ["Account Settings", "/account-settings", "profile", ["admin", "staff", "patient"]],
   ["My Profile", "/my-profile", "profile", ["patient"]]
 ];
 

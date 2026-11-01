@@ -85,6 +85,65 @@ export const getCurrentUser = async (req, res) => {
   }
 };
 
+// Synchronize an authenticated Firebase email change with MongoDB
+export const updateMyEmail = async (req, res) => {
+  try {
+    const { uid, email } = req.firebaseUser;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid Firebase email is required."
+      });
+    }
+
+    const user = await User.findOne({ firebaseUid: uid });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User profile not found."
+      });
+    }
+
+    if (user.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        message: "Your account is inactive. Access denied."
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+      _id: { $ne: user._id }
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "This email is already registered."
+      });
+    }
+
+    user.email = normalizedEmail;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Email updated successfully.",
+      data: user
+    });
+  } catch (error) {
+    console.error("Update email error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update email."
+    });
+  }
+};
+
 // Get all registered users (Admin only)
 export const getAllUsers = async (req, res) => {
   try {

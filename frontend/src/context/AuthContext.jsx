@@ -1,11 +1,16 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 
 import {
   createUserWithEmailAndPassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updatePassword,
+  updateProfile,
+  verifyBeforeUpdateEmail
 } from "firebase/auth";
 
 import { auth } from "../firebase";
@@ -16,6 +21,7 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const registrationInProgress = useRef(false);
 
   // Retrieve the user's MongoDB profile
   const fetchUserProfile = async (firebaseUser) => {
@@ -45,43 +51,55 @@ export const AuthProvider = ({ children }) => {
 
   // Register a new patient account
   const register = async (fullName, email, password) => {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+    registrationInProgress.current = true;
 
-    const firebaseUser = userCredential.user;
-
-    await updateProfile(firebaseUser, {
-      displayName: fullName
-    });
-
-    const token = await firebaseUser.getIdToken();
-
-    const response = await fetch(
-      "http://localhost:5000/api/users/register",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ fullName })
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.message || "Profile registration failed."
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
+
+      const firebaseUser = userCredential.user;
+
+      await updateProfile(firebaseUser, {
+        displayName: fullName
+      });
+
+      const token = await firebaseUser.getIdToken();
+
+      const response = await fetch(
+        "http://localhost:5000/api/users/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ fullName })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Profile registration failed."
+        );
+      }
+
+      await fetchUserProfile(firebaseUser);
+      setCurrentUser(firebaseUser);
+
+      return data;
+    } catch (error) {
+      await signOut(auth);
+      setCurrentUser(null);
+      setUserProfile(null);
+      throw error;
+    } finally {
+      registrationInProgress.current = false;
     }
-
-    await fetchUserProfile(firebaseUser);
-
-    return data;
   };
 
   // Login an existing account
@@ -141,11 +159,56 @@ export const AuthProvider = ({ children }) => {
     setUserProfile(null);
   };
 
+  const resetPassword = async (email) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
+  const changeEmail = async (newEmail, password) => {
+    const firebaseUser = auth.currentUser;
+
+    if (!firebaseUser?.email) {
+      throw new Error("No authenticated email account was found.");
+    }
+
+    const credential = EmailAuthProvider.credential(
+      firebaseUser.email,
+      password
+    );
+
+    await reauthenticateWithCredential(firebaseUser, credential);
+    await verifyBeforeUpdateEmail(
+      firebaseUser,
+      newEmail.trim().toLowerCase()
+    );
+  };
+
+  const changePassword = async (currentPassword, newPassword) => {
+    const firebaseUser = auth.currentUser;
+
+    if (!firebaseUser?.email) {
+      throw new Error("No authenticated email account was found.");
+    }
+
+    const credential = EmailAuthProvider.credential(
+      firebaseUser.email,
+      currentPassword
+    );
+
+    await reauthenticateWithCredential(firebaseUser, credential);
+    await updatePassword(firebaseUser, newPassword);
+  };
+
   // Monitor Firebase authentication state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
       auth,
       async (user) => {
+        // Firebase signs in a newly created account before its backend
+        // profile exists. Registration completes that synchronization.
+        if (user && registrationInProgress.current) {
+          return;
+        }
+
         setUserProfile(null);
 
         if (!user) {
@@ -185,6 +248,9 @@ export const AuthProvider = ({ children }) => {
     role: userProfile?.role || null,
     register,
     login,
+    resetPassword,
+    changeEmail,
+    changePassword,
     logout
   };
 
