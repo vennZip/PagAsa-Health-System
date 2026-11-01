@@ -1,5 +1,5 @@
 ﻿import { apiUrl } from "../config/api";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -23,6 +23,10 @@ function Appointments() {
     appointmentDate: "",
     appointmentTime: ""
   });
+
+  const activeAppointment = appointments.find(
+    (appointment) => ["pending", "approved"].includes(appointment.status)
+  );
 
   // Load available services
   useEffect(() => {
@@ -50,7 +54,7 @@ function Appointments() {
   }, []);
 
   // Load the patient's appointments
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       setAppointmentError("");
 
@@ -82,13 +86,15 @@ function Appointments() {
     } finally {
       setAppointmentsLoading(false);
     }
-  };
+  }, [currentUser]);
 
   useEffect(() => {
     if (currentUser) {
+      // The request updates state only after its asynchronous work completes.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchAppointments();
     }
-  }, [currentUser]);
+  }, [currentUser, fetchAppointments]);
 
   const handleChange = (e) => {
     setFormData({
@@ -224,6 +230,13 @@ function Appointments() {
 
       {success && <p style={{ color: "green" }}>{success}</p>}
 
+      {activeAppointment && (
+        <p className="alert alert--error">
+          You already have a {activeAppointment.status} appointment. You can
+          request another after it is completed, or cancel it while it is pending.
+        </p>
+      )}
+
       <form onSubmit={handleSubmit}>
         <label>Select Health Service</label>
         <br />
@@ -274,7 +287,13 @@ function Appointments() {
 
         <button
           type="submit"
-          disabled={saving || loading || services.length === 0}
+          disabled={
+            saving ||
+            loading ||
+            appointmentsLoading ||
+            services.length === 0 ||
+            Boolean(activeAppointment)
+          }
         >
           {saving ? "Submitting..." : "Submit Appointment Request"}
         </button>

@@ -23,3 +23,21 @@ table { width:100%; border-collapse:separate; border-spacing:0; overflow:hidden;
   transform: none;
   text-decoration: underline;
 }
+.modal-backdrop { position:fixed; inset:0; z-index:100; display:grid; place-items:center; padding:20px; background:rgba(8,35,63,.58); }
+.decision-panel { width:min(560px,100%); max-height:90vh; overflow-y:auto; margin:0; padding:26px; box-shadow:0 24px 60px rgba(8,35,63,.3); }
+.decision-panel form { display:block; padding:0; margin:20px 0 0; border:0; box-shadow:none; }
+.decision-panel textarea { min-height:120px; }
+.modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+.modal-actions button { width:auto; margin:0; }
+.modal-actions button:first-child { color:#334155; background:#e8eef5; }
+.analytics-grid { align-items:stretch; }
+.analytics-chart { margin:0; }
+.chart-bars { display:grid; gap:14px; margin-top:20px; }
+.chart-row { display:grid; grid-template-columns:90px minmax(100px,1fr) 34px; align-items:center; gap:10px; }
+.chart-label { color:#40536c; font-size:12px; font-weight:800; text-transform:capitalize; }
+.chart-track { height:18px; overflow:hidden; background:#edf2f7; border-radius:99px; }
+.chart-fill { min-width:0; height:100%; border-radius:99px; transition:width .25s ease; }
+.chart-row strong { color:#172b45; text-align:right; }
+.chart-caption { margin:18px 0 0; font-size:12px; }
+.action-note { color:#64748b; font-size:12px; font-weight:700; }
+@media (max-width:620px) { .chart-row { grid-template-columns:72px minmax(80px,1fr) 28px; }.modal-actions { flex-direction:column-reverse; }.modal-actions button { width:100%; } }

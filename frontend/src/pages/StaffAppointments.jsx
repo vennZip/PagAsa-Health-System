@@ -10,7 +10,10 @@ function StaffAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [decision, setDecision] = useState(null);
+  const [remarks, setRemarks] = useState("");
 
   // Retrieve all appointments from the backend
   const fetchAppointments = useCallback(async () => {
@@ -53,16 +56,36 @@ function StaffAppointments() {
 
   // Load appointments when the page opens
   useEffect(() => {
+    // The request updates state only after its asynchronous work completes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAppointments();
   }, [fetchAppointments]);
 
   // Approve or reject an appointment
-  const handleUpdateStatus = async (appointmentId, status) => {
-    const remarks = window.prompt(
-      `Enter remarks for this ${status} appointment:`
-    );
+  const openDecisionPanel = (appointment, status) => {
+    setError("");
+    setSuccess("");
+    setRemarks("");
+    setDecision({ appointment, status });
+  };
 
-    if (remarks === null) return;
+  const closeDecisionPanel = () => {
+    if (actionLoading) return;
+    setDecision(null);
+    setRemarks("");
+  };
+
+  const handleUpdateStatus = async (event) => {
+    event.preventDefault();
+
+    if (!decision) return;
+
+    const { appointment, status } = decision;
+
+    if (status === "rejected" && !remarks.trim()) {
+      setError("Please provide a reason when rejecting an appointment.");
+      return;
+    }
 
     try {
       setActionLoading(true);
@@ -71,7 +94,7 @@ function StaffAppointments() {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        apiUrl(`/api/appointments/${appointmentId}/status`),
+        apiUrl(`/api/appointments/${appointment._id}/status`),
         {
           method: "PATCH",
           headers: {
@@ -80,7 +103,7 @@ function StaffAppointments() {
           },
           body: JSON.stringify({
             status,
-            remarks
+            remarks: remarks.trim()
           })
         }
       );
@@ -93,7 +116,9 @@ function StaffAppointments() {
         );
       }
 
-      alert(`Appointment ${status} successfully!`);
+      setSuccess(`Appointment ${status} successfully.`);
+      setDecision(null);
+      setRemarks("");
 
       await fetchAppointments();
 
@@ -178,6 +203,8 @@ function StaffAppointments() {
         <p style={{ color: "red" }}>{error}</p>
       )}
 
+      {success && <p className="alert alert--success">{success}</p>}
+
       {!loading && !error && appointments.length === 0 && (
         <p>No appointment requests found.</p>
       )}
@@ -231,7 +258,7 @@ function StaffAppointments() {
             <div>
               <button
                 onClick={() =>
-                  handleUpdateStatus(appointment._id, "approved")
+                  openDecisionPanel(appointment, "approved")
                 }
                 disabled={actionLoading}
               >
@@ -242,7 +269,7 @@ function StaffAppointments() {
 
               <button
                 onClick={() =>
-                  handleUpdateStatus(appointment._id, "rejected")
+                  openDecisionPanel(appointment, "rejected")
                 }
                 disabled={actionLoading}
               >
@@ -265,6 +292,63 @@ function StaffAppointments() {
           <hr />
         </section>
       ))}
+
+      {decision && (
+        <div className="modal-backdrop" role="presentation">
+          <section
+            className="decision-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="appointment-decision-title"
+          >
+            <h2 id="appointment-decision-title">
+              {decision.status === "approved" ? "Approve" : "Reject"} Appointment
+            </h2>
+            <p>
+              <strong>Patient:</strong>{" "}
+              {decision.appointment.patientId?.userId?.fullName || "Unknown"}
+            </p>
+            <p>
+              <strong>Service:</strong>{" "}
+              {decision.appointment.serviceId?.serviceName || "Unknown Service"}
+            </p>
+            <p>
+              Add a message the patient can read with this decision.
+              {decision.status === "rejected" && " A rejection reason is required."}
+            </p>
+
+            {error && <p className="alert alert--error">{error}</p>}
+
+            <form onSubmit={handleUpdateStatus}>
+              <div>
+                <label htmlFor="appointment-remarks">Remarks</label>
+                <textarea
+                  id="appointment-remarks"
+                  value={remarks}
+                  onChange={(event) => setRemarks(event.target.value)}
+                  placeholder={
+                    decision.status === "approved"
+                      ? "e.g., Please arrive 15 minutes early."
+                      : "Explain why this request cannot be approved."
+                  }
+                  required={decision.status === "rejected"}
+                  autoFocus
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" onClick={closeDecisionPanel} disabled={actionLoading}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={actionLoading}>
+                  {actionLoading
+                    ? "Saving..."
+                    : `Confirm ${decision.status === "approved" ? "Approval" : "Rejection"}`}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
 
       <button onClick={() => navigate("/dashboard")}>
         Back to Dashboard

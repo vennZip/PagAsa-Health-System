@@ -204,7 +204,7 @@ function AppContent() {
       <Route path="/notifications" element={<ProtectedRoute allowedRoles={["patient", "staff", "admin"]}><MyNotifications /></ProtectedRoute>} />
       <Route path="/services-management" element={<ProtectedRoute allowedRoles={["admin"]}><ServiceManagement /></ProtectedRoute>} />
       <Route path="/activity-logs" element={<ProtectedRoute allowedRoles={["admin"]}><ActivityLogs /></ProtectedRoute>} />
-      <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin"]}><ReportsAnalytics /></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><ReportsAnalytics /></ProtectedRoute>} />
 
       {/* Admin User Management */}
 <Route

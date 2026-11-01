@@ -237,7 +237,15 @@ function QueueManagement() {
                     </>
                   )}
 
-                  {["waiting", "completed", "skipped"].includes(ticket.status) && "â€”"}
+                  {ticket.status === "waiting" && (
+                    <span className="action-note">Waiting for call</span>
+                  )}
+                  {ticket.status === "completed" && (
+                    <span className="action-note">Completed - no action needed</span>
+                  )}
+                  {ticket.status === "skipped" && (
+                    <span className="action-note">Skipped - no action available</span>
+                  )}
                 </td>
               </tr>
             ))}

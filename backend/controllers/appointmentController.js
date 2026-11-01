@@ -30,6 +30,19 @@ export const createAppointment = async (req, res) => {
       });
     }
 
+    const activeAppointment = await Appointment.findOne({
+      patientId: patient._id,
+      status: { $in: ["pending", "approved"] }
+    }).select("status appointmentDate appointmentTime");
+
+    if (activeAppointment) {
+      return res.status(409).json({
+        success: false,
+        message: "You already have an active appointment. Wait for it to be completed, or cancel it while it is pending, before requesting another one.",
+        data: activeAppointment
+      });
+    }
+
     // Check whether the selected service exists
     const service = await Service.findById(serviceId);
 
@@ -263,8 +276,9 @@ export const updateAppointmentStatus = async (req, res) => {
         message: "Appointment not found or it is no longer pending."
       });
     }
-    await logActivity({ userId: req.user.id, action: "Completed appointment", module: "Appointments", description: "Marked an appointment as completed.", targetId: appointment._id, ipAddress: req.ip });
-    await notifyPatient(appointment.patientId._id, "Appointment completed", "Your appointment has been marked as completed.", "appointment");
+    const statusLabel = status === "approved" ? "approved" : "rejected";
+    await logActivity({ userId: req.user.id, action: `${statusLabel === "approved" ? "Approved" : "Rejected"} appointment`, module: "Appointments", description: `Marked an appointment as ${statusLabel}.`, targetId: appointment._id, ipAddress: req.ip });
+    await notifyPatient(appointment.patientId._id, `Appointment ${statusLabel}`, `Your appointment request was ${statusLabel}.${remarks ? ` Remarks: ${remarks}` : ""}`, "appointment");
 
     res.status(200).json({
       success: true,
@@ -319,6 +333,9 @@ export const completeAppointment = async (req, res) => {
         message: "Appointment not found or it is not approved."
       });
     }
+
+    await logActivity({ userId: req.user.id, action: "Completed appointment", module: "Appointments", description: "Marked an appointment as completed.", targetId: appointment._id, ipAddress: req.ip });
+    await notifyPatient(appointment.patientId._id, "Appointment completed", "Your appointment has been marked as completed.", "appointment");
 
     res.status(200).json({
       success: true,
