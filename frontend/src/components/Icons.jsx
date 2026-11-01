@@ -1,0 +1,19 @@
+const paths = {
+  dashboard: "M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z",
+  users: "M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3Zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3Zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13Zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5Z",
+  calendar: "M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 16H5V9h14v11Z",
+  queue: "M3 13h2v-2H3v2Zm0 4h2v-2H3v2Zm0-8h2V7H3v2Zm4 4h14v-2H7v2Zm0 4h14v-2H7v2Zm0-10v2h14V7H7Z",
+  inventory: "M20.5 6.5 17.5 3.5l-1.4 1.4 3 3 1.4-1.4ZM3.5 19.5l3 3 1.4-1.4-3-3-1.4 1.4ZM12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 14a6 6 0 1 1 0-12 6 6 0 0 1 0 12Z",
+  service: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2Z",
+  bell: "M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6v-5a7 7 0 0 0-5-6.71V3a2 2 0 1 0-4 0v1.29A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z",
+  logs: "M4 3h12l4 4v14H4V3Zm11 1.5V8h3.5L15 4.5ZM7 12h10v-2H7v2Zm0 4h10v-2H7v2Z",
+  reports: "M5 19h14v2H3V3h2v16Zm3-2H6v-7h2v7Zm5 0h-2V5h2v12Zm5 0h-2V8h2v9Z",
+  profile: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z",
+  logout: "M10 17v-2h5.59L14 13.41 15.41 12 19.41 16l-4 4L14 18.59 15.59 17H10Zm-6 3V4c0-1.1.9-2 2-2h7v2H6v16h7v2H6c-1.1 0-2-.9-2-2Z",
+  menu: "M3 18h18v-2H3v2Zm0-5h18v-2H3v2Zm0-7v2h18V6H3Z",
+  close: "M18.3 5.71 16.89 4.3 12 9.17 7.11 4.3 5.7 5.71 10.59 10.6 5.7 15.49l1.41 1.41L12 12.01l4.89 4.89 1.41-1.41-4.89-4.89 4.89-4.89Z"
+};
+
+export function Icon({ name, size = 20 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d={paths[name] || paths.dashboard} /></svg>;
+}
