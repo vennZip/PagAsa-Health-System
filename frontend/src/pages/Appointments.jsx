@@ -89,11 +89,21 @@ function Appointments() {
   }, [currentUser]);
 
   useEffect(() => {
-    if (currentUser) {
-      // The request updates state only after its asynchronous work completes.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchAppointments();
-    }
+    if (!currentUser) return undefined;
+
+    // The request updates state only after its asynchronous work completes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAppointments();
+    const interval = window.setInterval(fetchAppointments, 10000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") fetchAppointments();
+    };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [currentUser, fetchAppointments]);
 
   const handleChange = (e) => {
@@ -302,6 +312,10 @@ function Appointments() {
       <hr />
 
       <h2>My Appointment History</h2>
+
+      <button type="button" onClick={fetchAppointments} disabled={appointmentsLoading}>
+        Refresh Appointment Status
+      </button>
 
       {appointmentsLoading && (
         <p>Loading your appointments...</p>
