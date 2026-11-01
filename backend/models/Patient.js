@@ -36,7 +36,8 @@ const patientSchema = new mongoose.Schema(
     contactNumber: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      match: [/^09\d{9}$/, "Contact number must be a Philippine mobile number beginning with 09."]
     },
 
     emergencyContact: {
@@ -50,7 +51,11 @@ const patientSchema = new mongoose.Schema(
       },
       contactNumber: {
         type: String,
-        trim: true
+        trim: true,
+        validate: {
+          validator: (value) => !value || /^09\d{9}$/.test(value),
+          message: "Emergency contact number must be a Philippine mobile number beginning with 09."
+        }
       }
     }
   },

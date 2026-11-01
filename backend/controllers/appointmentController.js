@@ -3,7 +3,7 @@ import Patient from "../models/Patient.js";
 import Service from "../models/Service.js";
 import mongoose from "mongoose";
 import { logActivity } from "../utils/activityLogger.js";
-import { notifyPatient } from "../utils/notificationService.js";
+import { notifyPatient, notifyRoles } from "../utils/notificationService.js";
 
 // POST: Patient requests an appointment
 export const createAppointment = async (req, res) => {
@@ -75,6 +75,12 @@ export const createAppointment = async (req, res) => {
       status: "pending"
     });
     await logActivity({ userId: req.user.id, action: "Requested appointment", module: "Appointments", description: "Submitted an appointment request.", targetId: appointment._id, ipAddress: req.ip });
+    await notifyRoles(
+      ["admin", "staff"],
+      "New appointment request",
+      `${req.user.fullName} requested ${service.serviceName} on ${selectedDate.toLocaleDateString("en-PH")}.`,
+      "appointment"
+    );
 
     res.status(201).json({
       success: true,
@@ -162,9 +168,6 @@ export const cancelAppointment = async (req, res) => {
         message: "Appointment not found."
       });
     }
-    await logActivity({ userId: req.user.id, action: `Appointment ${status}`, module: "Appointments", description: `Updated an appointment to ${status}.`, targetId: appointment._id, ipAddress: req.ip });
-    await notifyPatient(appointment.patientId._id, "Appointment updated", `Your appointment has been ${status}.`, "appointment");
-
     if (appointment.status !== "pending") {
       return res.status(400).json({
         success: false,
@@ -174,6 +177,13 @@ export const cancelAppointment = async (req, res) => {
 
     appointment.status = "cancelled";
     await appointment.save();
+    await logActivity({ userId: req.user.id, action: "Cancelled appointment", module: "Appointments", description: "Cancelled a pending appointment request.", targetId: appointment._id, ipAddress: req.ip });
+    await notifyRoles(
+      ["admin", "staff"],
+      "Appointment cancelled",
+      `${req.user.fullName} cancelled a pending appointment request.`,
+      "appointment"
+    );
 
     res.status(200).json({
       success: true,

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
+import { useTheme } from "../context/useTheme";
 
 function AccountSettings() {
+  const { theme, setTheme } = useTheme();
   const {
     currentUser,
     userProfile,
@@ -126,6 +128,27 @@ function AccountSettings() {
           <p>Manage the email address used to sign in to your account.</p>
         </div>
       </div>
+
+      <section>
+        <h2>Appearance</h2>
+        <p>Choose how the health center system appears on this device.</p>
+        <div className="theme-options" role="group" aria-label="Color theme">
+          <button
+            type="button"
+            className={theme === "light" ? "theme-option theme-option--active" : "theme-option"}
+            onClick={() => setTheme("light")}
+          >
+            Light Mode
+          </button>
+          <button
+            type="button"
+            className={theme === "dark" ? "theme-option theme-option--active" : "theme-option"}
+            onClick={() => setTheme("dark")}
+          >
+            Dark Mode
+          </button>
+        </div>
+      </section>
 
       <section>
         <h2>Change Email Address</h2>

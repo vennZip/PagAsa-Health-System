@@ -2,6 +2,7 @@ import express from "express";
 
 import {
   issueQueueTicket,
+  getEligibleQueueAppointments,
   getTodayQueue,
   callNextQueueTicket,
   updateQueueTicketStatus,
@@ -15,6 +16,13 @@ const router = express.Router();
 
 // Patient views only their own active ticket for today.
 router.get("/my", protect, authorizeRoles("patient"), getMyQueueTicket);
+
+router.get(
+  "/eligible-appointments",
+  protect,
+  authorizeRoles("admin", "staff"),
+  getEligibleQueueAppointments
+);
 
 // Staff and administrators manage the daily FIFO queue.
 router.get("/", protect, authorizeRoles("admin", "staff"), getTodayQueue);

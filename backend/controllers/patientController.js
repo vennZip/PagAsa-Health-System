@@ -2,6 +2,7 @@ import Patient from "../models/Patient.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
 import { randomBytes } from "node:crypto";
+import { notifyRoles } from "../utils/notificationService.js";
 
 // GET: Retrieve all patients
 export const getPatients = async (req, res) => {
@@ -120,6 +121,13 @@ export const createPatient = async (req, res) => {
       contactNumber,
       emergencyContact
     });
+
+    await notifyRoles(
+      ["admin", "staff"],
+      "New patient profile",
+      `${existingUser.fullName} completed a patient profile.`,
+      "system"
+    );
 
     res.status(201).json({
       success: true,

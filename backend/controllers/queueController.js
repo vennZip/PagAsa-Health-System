@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Patient from "../models/Patient.js";
 import QueueTicket from "../models/QueueTicket.js";
+import Appointment from "../models/Appointment.js";
 import { logActivity } from "../utils/activityLogger.js";
 import { notifyPatient } from "../utils/notificationService.js";
 
@@ -21,6 +22,58 @@ const getPhilippinesQueueDay = () => {
   return new Date(
     Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day))
   );
+};
+
+const getQueueDayRange = () => {
+  const start = getPhilippinesQueueDay();
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+};
+
+// GET: Approved appointments eligible for a queue ticket today.
+export const getEligibleQueueAppointments = async (req, res) => {
+  try {
+    const { start, end } = getQueueDayRange();
+    const appointments = await Appointment.find({
+      status: "approved",
+      appointmentDate: { $gte: start, $lt: end }
+    })
+      .select("patientId serviceId appointmentDate appointmentTime")
+      .populate({
+        path: "patientId",
+        select: "patientNumber contactNumber",
+        populate: { path: "userId", select: "fullName" }
+      })
+      .populate("serviceId", "serviceName")
+      .sort({ appointmentTime: 1 });
+
+    const patientIds = appointments
+      .map((appointment) => appointment.patientId?._id)
+      .filter(Boolean);
+    const existingTickets = await QueueTicket.find({
+      queueDate: start,
+      patientId: { $in: patientIds }
+    }).select("patientId");
+    const ticketedPatients = new Set(
+      existingTickets.map((ticket) => String(ticket.patientId))
+    );
+    const eligibleAppointments = appointments.filter(
+      (appointment) => !ticketedPatients.has(String(appointment.patientId?._id))
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: eligibleAppointments.length,
+      data: eligibleAppointments
+    });
+  } catch (error) {
+    console.error("Get eligible queue appointments error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve approved appointments for today's queue."
+    });
+  }
 };
 
 // POST: Issue the next FIFO ticket for a patient on the current Philippine date.
@@ -44,17 +97,29 @@ export const issueQueueTicket = async (req, res) => {
       });
     }
 
-    const queueDate = getPhilippinesQueueDay();
+    const { start: queueDate, end: queueDayEnd } = getQueueDayRange();
+    const approvedAppointment = await Appointment.findOne({
+      patientId,
+      status: "approved",
+      appointmentDate: { $gte: queueDate, $lt: queueDayEnd }
+    });
+
+    if (!approvedAppointment) {
+      return res.status(403).json({
+        success: false,
+        message: "A queue ticket requires an approved appointment scheduled for today."
+      });
+    }
+
     const existingTicket = await QueueTicket.findOne({
       patientId,
-      queueDate,
-      isActive: true
+      queueDate
     });
 
     if (existingTicket) {
       return res.status(409).json({
         success: false,
-        message: "This patient already has an active queue ticket today.",
+        message: "This patient has already received a queue ticket today.",
         data: existingTicket
       });
     }

@@ -2,6 +2,10 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
+import {
+  PHILIPPINE_MOBILE_PATTERN,
+  sanitizePhilippineMobile
+} from "../utils/phone";
 
 function EditProfile() {
   const { currentUser } = useAuth();
@@ -73,9 +77,13 @@ function EditProfile() {
   }, [currentUser]);
 
   const handleChange = (e) => {
+    const value = ["contactNumber", "emergencyContactNumber"].includes(e.target.name)
+      ? sanitizePhilippineMobile(e.target.value)
+      : e.target.value;
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: value
     });
   };
 
@@ -183,9 +191,14 @@ function EditProfile() {
         <label>Contact Number</label>
         <input
           type="tel"
+          inputMode="numeric"
           name="contactNumber"
           value={formData.contactNumber}
           onChange={handleChange}
+          pattern={PHILIPPINE_MOBILE_PATTERN}
+          maxLength="11"
+          placeholder="09XXXXXXXXX"
+          title="Enter an 11-digit Philippine mobile number beginning with 09."
           required
         />
 
@@ -214,9 +227,14 @@ function EditProfile() {
         <label>Emergency Contact Number</label>
         <input
           type="tel"
+          inputMode="numeric"
           name="emergencyContactNumber"
           value={formData.emergencyContactNumber}
           onChange={handleChange}
+          pattern={PHILIPPINE_MOBILE_PATTERN}
+          maxLength="11"
+          placeholder="09XXXXXXXXX"
+          title="Enter an 11-digit Philippine mobile number beginning with 09."
         />
 
         <br /><br />

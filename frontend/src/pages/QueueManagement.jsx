@@ -1,5 +1,5 @@
 ﻿import { apiUrl } from "../config/api";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
@@ -7,8 +7,9 @@ function QueueManagement() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  const [patients, setPatients] = useState([]);
+  const [eligibleAppointments, setEligibleAppointments] = useState([]);
   const [queueTickets, setQueueTickets] = useState([]);
+  const [ticketPanel, setTicketPanel] = useState(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -24,25 +25,25 @@ function QueueManagement() {
 
       const token = await currentUser.getIdToken();
       const headers = { Authorization: `Bearer ${token}` };
-      const [patientsResponse, queueResponse] = await Promise.all([
-        fetch(apiUrl("/api/patients"), { headers }),
+      const [appointmentsResponse, queueResponse] = await Promise.all([
+        fetch(apiUrl("/api/queue/eligible-appointments"), { headers }),
         fetch(apiUrl("/api/queue"), { headers })
       ]);
 
-      const [patientsData, queueData] = await Promise.all([
-        patientsResponse.json(),
+      const [appointmentsData, queueData] = await Promise.all([
+        appointmentsResponse.json(),
         queueResponse.json()
       ]);
 
-      if (!patientsResponse.ok) {
-        throw new Error(patientsData.message || "Failed to load patients.");
+      if (!appointmentsResponse.ok) {
+        throw new Error(appointmentsData.message || "Failed to load approved appointments.");
       }
 
       if (!queueResponse.ok) {
         throw new Error(queueData.message || "Failed to load today's queue.");
       }
 
-      setPatients(patientsData.data || []);
+      setEligibleAppointments(appointmentsData.data || []);
       setQueueTickets(queueData.data || []);
     } catch (err) {
       setError(err.message || "Unable to load queue information.");
@@ -57,18 +58,9 @@ function QueueManagement() {
     fetchQueueData();
   }, [fetchQueueData]);
 
-  const activePatientIds = useMemo(
-    () => new Set(
-      queueTickets
-        .filter((ticket) => ticket.isActive)
-        .map((ticket) => ticket.patientId?._id || ticket.patientId)
-    ),
-    [queueTickets]
-  );
-
-  const filteredPatients = patients.filter((patient) => {
-    const name = patient.userId?.fullName || "";
-    const patientNumber = patient.patientNumber || "";
+  const filteredAppointments = eligibleAppointments.filter((appointment) => {
+    const name = appointment.patientId?.userId?.fullName || "";
+    const patientNumber = appointment.patientId?.patientNumber || "";
     const searchValue = search.toLowerCase();
 
     return (
@@ -101,25 +93,24 @@ function QueueManagement() {
 
       setSuccess(successMessage || data.message);
       await fetchQueueData();
+      return true;
     } catch (err) {
       setError(err.message || "Unable to update the queue.");
+      return false;
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleIssueTicket = (patient) => {
-    const patientName = patient.userId?.fullName || "this patient";
-    const confirmed = window.confirm(`Issue a queue ticket to ${patientName}?`);
-
-    if (confirmed) {
-      runQueueAction(
-        "/api/queue",
-        "POST",
-        { patientId: patient._id },
-        "Queue ticket issued successfully."
-      );
-    }
+  const handleIssueTicket = async () => {
+    if (!ticketPanel) return;
+    const completed = await runQueueAction(
+      "/api/queue",
+      "POST",
+      { patientId: ticketPanel.patientId._id },
+      "Queue ticket issued successfully."
+    );
+    if (completed) setTicketPanel(null);
   };
 
   const formatTime = (date) => {
@@ -256,6 +247,7 @@ function QueueManagement() {
       <hr />
 
       <h2>Issue a Queue Ticket</h2>
+      <p>Only patients with approved appointments scheduled for today are listed.</p>
       <input
         type="text"
         placeholder="Search by name or patient number..."
@@ -269,26 +261,27 @@ function QueueManagement() {
             <tr>
               <th>Patient Number</th>
               <th>Full Name</th>
-              <th>Current Ticket</th>
+              <th>Approved Service</th>
+              <th>Appointment Time</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {filteredPatients.length > 0 ? (
-              filteredPatients.map((patient) => {
-                const hasActiveTicket = activePatientIds.has(patient._id);
-
+            {filteredAppointments.length > 0 ? (
+              filteredAppointments.map((appointment) => {
+                const patient = appointment.patientId;
                 return (
-                  <tr key={patient._id}>
-                    <td>{patient.patientNumber}</td>
-                    <td>{patient.userId?.fullName || "N/A"}</td>
-                    <td>{hasActiveTicket ? "Active ticket issued" : "None"}</td>
+                  <tr key={appointment._id}>
+                    <td>{patient?.patientNumber || "N/A"}</td>
+                    <td>{patient?.userId?.fullName || "N/A"}</td>
+                    <td>{appointment.serviceId?.serviceName || "N/A"}</td>
+                    <td>{appointment.appointmentTime}</td>
                     <td>
                       <button
-                        onClick={() => handleIssueTicket(patient)}
-                        disabled={actionLoading || hasActiveTicket}
+                        onClick={() => setTicketPanel(appointment)}
+                        disabled={actionLoading}
                       >
-                        {hasActiveTicket ? "Ticket Active" : "Issue Ticket"}
+                        Review and Issue
                       </button>
                     </td>
                   </tr>
@@ -296,11 +289,33 @@ function QueueManagement() {
               })
             ) : (
               <tr>
-                <td colSpan="4">No patients found.</td>
+                <td colSpan="5">No approved appointments are eligible for a ticket today.</td>
               </tr>
             )}
           </tbody>
         </table>
+      )}
+
+      {ticketPanel && (
+        <div className="modal-backdrop" role="presentation">
+          <section className="decision-panel" role="dialog" aria-modal="true" aria-labelledby="issue-ticket-title">
+            <h2 id="issue-ticket-title">Issue Queue Ticket</h2>
+            <p>Review the approved appointment before issuing today&apos;s ticket.</p>
+            <div className="review-list">
+              <p><strong>Patient:</strong> {ticketPanel.patientId?.userId?.fullName || "N/A"}</p>
+              <p><strong>Patient Number:</strong> {ticketPanel.patientId?.patientNumber || "N/A"}</p>
+              <p><strong>Service:</strong> {ticketPanel.serviceId?.serviceName || "N/A"}</p>
+              <p><strong>Appointment Time:</strong> {ticketPanel.appointmentTime}</p>
+            </div>
+            {error && <p className="alert alert--error">{error}</p>}
+            <div className="modal-actions">
+              <button type="button" onClick={() => setTicketPanel(null)} disabled={actionLoading}>Cancel</button>
+              <button type="button" onClick={handleIssueTicket} disabled={actionLoading}>
+                {actionLoading ? "Issuing..." : "Confirm and Issue Ticket"}
+              </button>
+            </div>
+          </section>
+        </div>
       )}
     </div>
   );

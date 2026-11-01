@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import InventoryTransaction from "../models/InventoryTransaction.js";
 import Medicine from "../models/Medicine.js";
 import { logActivity } from "../utils/activityLogger.js";
+import { notifyRoles } from "../utils/notificationService.js";
 
 const getStockStatus = (quantity, minimumStock) => {
   if (quantity === 0) return "out-of-stock";
@@ -33,6 +34,9 @@ export const createMedicine = async (req, res) => {
       expirationDate: expirationDate || null,
       status: getStockStatus(Number(quantity), Number(minimumStock))
     });
+    if (["low-stock", "out-of-stock"].includes(medicine.status)) {
+      await notifyRoles(["admin", "staff"], "Inventory warning", `${medicine.medicineName} is ${medicine.status.replaceAll("-", " ")}.`, "inventory");
+    }
     return res.status(201).json({ success: true, message: "Medicine added successfully.", data: medicine });
   } catch (error) {
     if (error?.code === 11000) return res.status(409).json({ success: false, message: "This medicine already exists." });
@@ -69,12 +73,16 @@ export const createInventoryTransaction = async (req, res) => {
     }
     const medicine = await Medicine.findById(id);
     if (!medicine) return res.status(404).json({ success: false, message: "Medicine not found." });
+    const previousStatus = medicine.status;
     const amount = Number(quantity);
     const addStock = ["stock-in", "adjustment"].includes(transactionType);
     if (!addStock && medicine.quantity < amount) return res.status(400).json({ success: false, message: "Insufficient stock for this transaction." });
     medicine.quantity += addStock ? amount : -amount;
     medicine.status = getStockStatus(medicine.quantity, medicine.minimumStock);
     await medicine.save();
+    if (medicine.status !== previousStatus && ["low-stock", "out-of-stock"].includes(medicine.status)) {
+      await notifyRoles(["admin", "staff"], "Inventory warning", `${medicine.medicineName} is ${medicine.status.replaceAll("-", " ")} with ${medicine.quantity} ${medicine.unit} remaining.`, "inventory");
+    }
     const transaction = await InventoryTransaction.create({ medicineId: medicine._id, transactionType, quantity: amount, reason: reason.trim(), performedBy: req.user.id });
     await logActivity({ userId: req.user.id, action: "Inventory transaction", module: "Inventory", description: `${transactionType} of ${amount} ${medicine.unit} for ${medicine.medicineName}.`, targetId: medicine._id, ipAddress: req.ip });
     return res.status(201).json({ success: true, message: "Inventory updated successfully.", data: { medicine, transaction } });

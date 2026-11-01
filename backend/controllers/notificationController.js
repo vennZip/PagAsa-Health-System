@@ -3,7 +3,9 @@ import Notification from "../models/Notification.js";
 
 export const getMyNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    const notifications = await Notification.find({ userId: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(100);
     return res.status(200).json({ success: true, count: notifications.length, data: notifications });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Failed to retrieve notifications." });
