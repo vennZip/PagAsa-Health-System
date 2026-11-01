@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiUrl } from "../config/api";
 import { useAuth } from "../context/useAuth";
+import {
+  playNotificationChime,
+  unlockNotificationSound
+} from "../utils/notificationSound";
 
 const destinationFor = (type, role) => {
   if (type === "appointment") {
@@ -47,6 +51,7 @@ function NotificationToasts({ onUnreadCountChange }) {
       notifications.forEach((notification) => knownIds.current.add(notification._id));
 
       if (incoming.length > 0) {
+        playNotificationChime();
         setToasts((current) => [...incoming, ...current].slice(0, 4));
       }
     } catch {
@@ -59,6 +64,20 @@ function NotificationToasts({ onUnreadCountChange }) {
     const interval = window.setInterval(loadNotifications, 10000);
     return () => window.clearInterval(interval);
   }, [loadNotifications]);
+
+  useEffect(() => {
+    const unlock = () => {
+      unlockNotificationSound();
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
 
   const viewNotification = async (notification) => {
     try {

@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useTheme } from "../context/useTheme";
+import {
+  isNotificationSoundEnabled,
+  playNotificationChime,
+  setNotificationSoundEnabled
+} from "../utils/notificationSound";
 
 function AccountSettings() {
   const { theme, setTheme } = useTheme();
+  const [soundEnabled, setSoundEnabled] = useState(isNotificationSoundEnabled);
   const {
     currentUser,
     userProfile,
@@ -22,6 +28,12 @@ function AccountSettings() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
+
+  const updateSoundPreference = (enabled) => {
+    setSoundEnabled(enabled);
+    setNotificationSoundEnabled(enabled);
+    if (enabled) playNotificationChime();
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -146,6 +158,24 @@ function AccountSettings() {
             onClick={() => setTheme("dark")}
           >
             Dark Mode
+          </button>
+        </div>
+        <h3>Notification Sound</h3>
+        <p>Play a short chime when a new live notification appears.</p>
+        <div className="theme-options" role="group" aria-label="Notification sound">
+          <button
+            type="button"
+            className={soundEnabled ? "theme-option theme-option--active" : "theme-option"}
+            onClick={() => updateSoundPreference(true)}
+          >
+            Sound On
+          </button>
+          <button
+            type="button"
+            className={!soundEnabled ? "theme-option theme-option--active" : "theme-option"}
+            onClick={() => updateSoundPreference(false)}
+          >
+            Sound Off
           </button>
         </div>
       </section>

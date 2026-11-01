@@ -1,7 +1,8 @@
-﻿import { apiUrl } from "../config/api";
+import { apiUrl } from "../config/api";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { exportDateStamp, exportToExcelCsv } from "../utils/exportCsv";
 
 function ActivityLogs() {
   const { currentUser } = useAuth();
@@ -14,16 +15,67 @@ function ActivityLogs() {
     try {
       setLoading(true);
       const token = await currentUser.getIdToken();
-      const response = await fetch(apiUrl("/api/activity-logs"), { headers: { Authorization: `Bearer ${token}` } });
+      const response = await fetch(apiUrl("/api/activity-logs"), {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to load activity logs.");
       setLogs(data.data || []);
-    } catch (err) { setError(err.message || "Unable to load activity logs."); } finally { setLoading(false); }
+    } catch (err) {
+      setError(err.message || "Unable to load activity logs.");
+    } finally {
+      setLoading(false);
+    }
   }, [currentUser]);
 
-  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadLogs(); }, [loadLogs]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadLogs();
+  }, [loadLogs]);
 
-  return <div><h1>Activity Logs</h1><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button><button onClick={loadLogs} disabled={loading}>Refresh</button>{error && <p style={{ color: "red" }}>{error}</p>}{loading ? <p>Loading activity logs...</p> : <table border="1" cellPadding="10"><thead><tr><th>Date and Time</th><th>User</th><th>Module</th><th>Action</th><th>Description</th></tr></thead><tbody>{logs.length ? logs.map((log) => <tr key={log._id}><td>{new Date(log.createdAt).toLocaleString()}</td><td>{log.userId?.fullName || "Unknown user"}</td><td>{log.module}</td><td>{log.action}</td><td>{log.description}</td></tr>) : <tr><td colSpan="5">No activity logs found.</td></tr>}</tbody></table>}</div>;
+  const exportLogs = () => {
+    exportToExcelCsv(
+      `pagasa-activity-logs-${exportDateStamp()}.csv`,
+      [
+        { label: "Date and Time", value: (log) => new Date(log.createdAt).toLocaleString("en-PH", { timeZone: "Asia/Manila" }) },
+        { label: "User", value: (log) => log.userId?.fullName || "Unknown user" },
+        { label: "Module", value: (log) => log.module },
+        { label: "Action", value: (log) => log.action },
+        { label: "Description", value: (log) => log.description }
+      ],
+      logs
+    );
+  };
+
+  return (
+    <div>
+      <h1>Activity Logs</h1>
+      <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+      <button onClick={loadLogs} disabled={loading}>Refresh</button>
+      <button onClick={exportLogs} disabled={loading || logs.length === 0}>
+        Export for Excel
+      </button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {loading ? (
+        <p>Loading activity logs...</p>
+      ) : (
+        <table border="1" cellPadding="10">
+          <thead><tr><th>Date and Time</th><th>User</th><th>Module</th><th>Action</th><th>Description</th></tr></thead>
+          <tbody>
+            {logs.length ? logs.map((log) => (
+              <tr key={log._id}>
+                <td>{new Date(log.createdAt).toLocaleString()}</td>
+                <td>{log.userId?.fullName || "Unknown user"}</td>
+                <td>{log.module}</td>
+                <td>{log.action}</td>
+                <td>{log.description}</td>
+              </tr>
+            )) : <tr><td colSpan="5">No activity logs found.</td></tr>}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
 }
+
 export default ActivityLogs;

@@ -13,6 +13,7 @@ function StaffAppointments() {
   const [success, setSuccess] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [decision, setDecision] = useState(null);
+  const [completion, setCompletion] = useState(null);
   const [remarks, setRemarks] = useState("");
 
   // Retrieve all appointments from the backend
@@ -133,12 +134,8 @@ function StaffAppointments() {
   };
 
   // Mark an approved appointment as completed
-  const handleCompleteAppointment = async (appointmentId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to mark this appointment as completed?"
-    );
-
-    if (!confirmed) return;
+  const handleCompleteAppointment = async () => {
+    if (!completion) return;
 
     try {
       setActionLoading(true);
@@ -147,7 +144,7 @@ function StaffAppointments() {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        apiUrl(`/api/appointments/${appointmentId}/complete`),
+        apiUrl(`/api/appointments/${completion._id}/complete`),
         {
           method: "PATCH",
           headers: {
@@ -164,7 +161,8 @@ function StaffAppointments() {
         );
       }
 
-      alert("Appointment marked as completed!");
+      setSuccess("Appointment marked as completed successfully.");
+      setCompletion(null);
 
       await fetchAppointments();
 
@@ -281,7 +279,11 @@ function StaffAppointments() {
           {appointment.status === "approved" && (
             <button
               onClick={() =>
-                handleCompleteAppointment(appointment._id)
+                {
+                  setError("");
+                  setSuccess("");
+                  setCompletion(appointment);
+                }
               }
               disabled={actionLoading}
             >
@@ -346,6 +348,35 @@ function StaffAppointments() {
                 </button>
               </div>
             </form>
+          </section>
+        </div>
+      )}
+
+      {completion && (
+        <div className="modal-backdrop" role="presentation">
+          <section
+            className="decision-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="complete-appointment-title"
+          >
+            <h2 id="complete-appointment-title">Complete Appointment</h2>
+            <p>Confirm that this patient&apos;s appointment has finished.</p>
+            <div className="review-list">
+              <p><strong>Patient:</strong> {completion.patientId?.userId?.fullName || "Unknown"}</p>
+              <p><strong>Service:</strong> {completion.serviceId?.serviceName || "Unknown Service"}</p>
+              <p><strong>Date:</strong> {formatDate(completion.appointmentDate)}</p>
+              <p><strong>Time:</strong> {completion.appointmentTime}</p>
+            </div>
+            {error && <p className="alert alert--error">{error}</p>}
+            <div className="modal-actions">
+              <button type="button" onClick={() => setCompletion(null)} disabled={actionLoading}>
+                Cancel
+              </button>
+              <button type="button" onClick={handleCompleteAppointment} disabled={actionLoading}>
+                {actionLoading ? "Completing..." : "OK - Mark as Completed"}
+              </button>
+            </div>
           </section>
         </div>
       )}

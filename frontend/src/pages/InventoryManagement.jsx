@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { exportDateStamp, exportToExcelCsv } from "../utils/exportCsv";
 
 function InventoryManagement() {
   const { currentUser } = useAuth();
@@ -52,10 +53,26 @@ function InventoryManagement() {
     setTransactionForm({ medicineId: "", transactionType: "stock-in", quantity: "", reason: "" });
   };
 
+  const exportInventory = () => {
+    exportToExcelCsv(
+      `pagasa-medicine-inventory-${exportDateStamp()}.csv`,
+      [
+        { label: "Medicine", value: (medicine) => medicine.medicineName },
+        { label: "Quantity", value: (medicine) => medicine.quantity },
+        { label: "Unit", value: (medicine) => medicine.unit },
+        { label: "Low-Stock Warning Level", value: (medicine) => medicine.minimumStock },
+        { label: "Status", value: (medicine) => medicine.status },
+        { label: "Expiration Date", value: (medicine) => medicine.expirationDate ? new Date(medicine.expirationDate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila" }) : "N/A" }
+      ],
+      medicines
+    );
+  };
+
   return <div>
     <h1>Medicine and Inventory Management</h1>
     <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
     <button onClick={loadMedicines} disabled={loading}>Refresh Inventory</button>
+    <button onClick={exportInventory} disabled={loading || medicines.length === 0}>Export for Excel</button>
     {error && <p style={{ color: "red" }}>{error}</p>}{success && <p style={{ color: "green" }}>{success}</p>}
     <h2>Add Medicine</h2>
     <form onSubmit={addMedicine}>
