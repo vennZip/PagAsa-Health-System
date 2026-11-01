@@ -238,16 +238,24 @@ function Appointments() {
 
       <h2>Request an Appointment</h2>
 
-      {success && <p style={{ color: "green" }}>{success}</p>}
+      {success && <p className="alert alert--success">{success}</p>}
 
-      {activeAppointment && (
-        <p className="alert alert--error">
-          You already have a {activeAppointment.status} appointment. You can
-          request another after it is completed, or cancel it while it is pending.
-        </p>
-      )}
-
-      <form onSubmit={handleSubmit}>
+      {activeAppointment ? (
+        <section className="active-appointment-panel">
+          <h3>Current Appointment: {activeAppointment.status.toUpperCase()}</h3>
+          <p>
+            <strong>Service:</strong>{" "}
+            {activeAppointment.serviceId?.serviceName || "Health center service"}
+          </p>
+          <p><strong>Date:</strong> {formatDate(activeAppointment.appointmentDate)}</p>
+          <p><strong>Time:</strong> {activeAppointment.appointmentTime}</p>
+          <p className="alert alert--info">
+            A new request becomes available after this appointment is completed.
+            {activeAppointment.status === "pending" && " You may also cancel this pending request below."}
+          </p>
+        </section>
+      ) : (
+        <form onSubmit={handleSubmit}>
         <label>Select Health Service</label>
         <br />
 
@@ -301,13 +309,13 @@ function Appointments() {
             saving ||
             loading ||
             appointmentsLoading ||
-            services.length === 0 ||
-            Boolean(activeAppointment)
+            services.length === 0
           }
         >
           {saving ? "Submitting..." : "Submit Appointment Request"}
         </button>
-      </form>
+        </form>
+      )}
 
       <hr />
 

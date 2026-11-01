@@ -121,6 +121,13 @@ function QueueManagement() {
     });
   };
 
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("en-PH", {
+      timeZone: "Asia/Manila"
+    });
+  };
+
   return (
     <div>
       <h1>Queue Management</h1>
@@ -247,7 +254,7 @@ function QueueManagement() {
       <hr />
 
       <h2>Issue a Queue Ticket</h2>
-      <p>Only patients with approved appointments scheduled for today are listed.</p>
+      <p>Only patients with currently approved appointments and no ticket issued today are listed.</p>
       <input
         type="text"
         placeholder="Search by name or patient number..."
@@ -262,6 +269,7 @@ function QueueManagement() {
               <th>Patient Number</th>
               <th>Full Name</th>
               <th>Approved Service</th>
+              <th>Appointment Date</th>
               <th>Appointment Time</th>
               <th>Action</th>
             </tr>
@@ -275,6 +283,7 @@ function QueueManagement() {
                     <td>{patient?.patientNumber || "N/A"}</td>
                     <td>{patient?.userId?.fullName || "N/A"}</td>
                     <td>{appointment.serviceId?.serviceName || "N/A"}</td>
+                    <td>{formatDate(appointment.appointmentDate)}</td>
                     <td>{appointment.appointmentTime}</td>
                     <td>
                       <button
@@ -289,7 +298,7 @@ function QueueManagement() {
               })
             ) : (
               <tr>
-                <td colSpan="5">No approved appointments are eligible for a ticket today.</td>
+                <td colSpan="6">No approved appointments are currently eligible for a ticket.</td>
               </tr>
             )}
           </tbody>
@@ -305,6 +314,7 @@ function QueueManagement() {
               <p><strong>Patient:</strong> {ticketPanel.patientId?.userId?.fullName || "N/A"}</p>
               <p><strong>Patient Number:</strong> {ticketPanel.patientId?.patientNumber || "N/A"}</p>
               <p><strong>Service:</strong> {ticketPanel.serviceId?.serviceName || "N/A"}</p>
+              <p><strong>Appointment Date:</strong> {formatDate(ticketPanel.appointmentDate)}</p>
               <p><strong>Appointment Time:</strong> {ticketPanel.appointmentTime}</p>
             </div>
             {error && <p className="alert alert--error">{error}</p>}

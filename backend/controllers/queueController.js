@@ -31,13 +31,12 @@ const getQueueDayRange = () => {
   return { start, end };
 };
 
-// GET: Approved appointments eligible for a queue ticket today.
+// GET: Currently approved appointments eligible for a queue ticket.
 export const getEligibleQueueAppointments = async (req, res) => {
   try {
-    const { start, end } = getQueueDayRange();
+    const { start } = getQueueDayRange();
     const appointments = await Appointment.find({
-      status: "approved",
-      appointmentDate: { $gte: start, $lt: end }
+      status: "approved"
     })
       .select("patientId serviceId appointmentDate appointmentTime")
       .populate({
@@ -46,7 +45,7 @@ export const getEligibleQueueAppointments = async (req, res) => {
         populate: { path: "userId", select: "fullName" }
       })
       .populate("serviceId", "serviceName")
-      .sort({ appointmentTime: 1 });
+      .sort({ appointmentDate: 1, appointmentTime: 1 });
 
     const patientIds = appointments
       .map((appointment) => appointment.patientId?._id)
@@ -71,7 +70,7 @@ export const getEligibleQueueAppointments = async (req, res) => {
     console.error("Get eligible queue appointments error:", error.message);
     return res.status(500).json({
       success: false,
-      message: "Failed to retrieve approved appointments for today's queue."
+      message: "Failed to retrieve approved appointments for the queue."
     });
   }
 };
@@ -97,17 +96,16 @@ export const issueQueueTicket = async (req, res) => {
       });
     }
 
-    const { start: queueDate, end: queueDayEnd } = getQueueDayRange();
+    const { start: queueDate } = getQueueDayRange();
     const approvedAppointment = await Appointment.findOne({
       patientId,
-      status: "approved",
-      appointmentDate: { $gte: queueDate, $lt: queueDayEnd }
+      status: "approved"
     });
 
     if (!approvedAppointment) {
       return res.status(403).json({
         success: false,
-        message: "A queue ticket requires an approved appointment scheduled for today."
+        message: "A queue ticket requires a currently approved appointment."
       });
     }
 
