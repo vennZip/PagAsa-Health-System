@@ -19,15 +19,16 @@ dotenv.config();
 const app = express();
 
 // Middleware
+const normalizeOrigin = (origin) => origin.replace(/\/$/, "");
 const allowedOrigins = [
   "http://localhost:5173",
   ...((process.env.FRONTEND_URL || "").split(",").map((origin) => origin.trim()).filter(Boolean))
-];
+].map(normalizeOrigin);
 
 app.use(cors({
   origin(origin, callback) {
     // Requests without an Origin header include server-to-server and local API tools.
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(normalizeOrigin(origin))) {
       return callback(null, true);
     }
 

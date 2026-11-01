@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
@@ -16,7 +17,7 @@ function InventoryManagement() {
     try {
       setLoading(true);
       const token = await currentUser.getIdToken();
-      const response = await fetch("http://localhost:5000/api/medicines", { headers: { Authorization: `Bearer ${token}` } });
+      const response = await fetch(apiUrl("/api/medicines"), { headers: { Authorization: `Bearer ${token}` } });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to load inventory.");
       setMedicines(data.data || []);
@@ -32,7 +33,7 @@ function InventoryManagement() {
     try {
       setError(""); setSuccess("");
       const token = await currentUser.getIdToken();
-      const response = await fetch(`http://localhost:5000${url}`, { method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
+      const response = await fetch(apiUrl(`${url}`), { method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Inventory action failed.");
       setSuccess(message || data.message);

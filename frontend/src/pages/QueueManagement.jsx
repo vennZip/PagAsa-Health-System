@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
@@ -24,8 +25,8 @@ function QueueManagement() {
       const token = await currentUser.getIdToken();
       const headers = { Authorization: `Bearer ${token}` };
       const [patientsResponse, queueResponse] = await Promise.all([
-        fetch("http://localhost:5000/api/patients", { headers }),
-        fetch("http://localhost:5000/api/queue", { headers })
+        fetch(apiUrl("/api/patients"), { headers }),
+        fetch(apiUrl("/api/queue"), { headers })
       ]);
 
       const [patientsData, queueData] = await Promise.all([
@@ -83,7 +84,7 @@ function QueueManagement() {
       setSuccess("");
 
       const token = await currentUser.getIdToken();
-      const response = await fetch(`http://localhost:5000${url}`, {
+      const response = await fetch(apiUrl(`${url}`), {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -236,7 +237,7 @@ function QueueManagement() {
                     </>
                   )}
 
-                  {["waiting", "completed", "skipped"].includes(ticket.status) && "—"}
+                  {["waiting", "completed", "skipped"].includes(ticket.status) && "â€”"}
                 </td>
               </tr>
             ))}

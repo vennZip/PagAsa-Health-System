@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
@@ -16,7 +17,7 @@ function MyQueueStatus() {
       setLoading(true);
       setError("");
       const token = await currentUser.getIdToken();
-      const response = await fetch("http://localhost:5000/api/queue/my", {
+      const response = await fetch(apiUrl("/api/queue/my"), {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();

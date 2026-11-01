@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +29,7 @@ function EditProfile() {
         const token = await currentUser.getIdToken();
 
         const response = await fetch(
-          "http://localhost:5000/api/patients/me",
+          apiUrl("/api/patients/me"),
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -90,7 +91,7 @@ function EditProfile() {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        "http://localhost:5000/api/patients/me",
+        apiUrl("/api/patients/me"),
         {
           method: "PUT",
           headers: {

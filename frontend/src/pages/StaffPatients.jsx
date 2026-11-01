@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +20,7 @@ function StaffPatients() {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        "http://localhost:5000/api/patients",
+        apiUrl("/api/patients"),
         {
           headers: {
             Authorization: `Bearer ${token}`

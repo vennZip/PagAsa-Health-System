@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +19,7 @@ const handleRoleChange = async (userId, newRole) => {
     const token = await currentUser.getIdToken();
 
     const response = await fetch(
-      `http://localhost:5000/api/users/${userId}/role`,
+      apiUrl(`/api/users/${userId}/role`),
       {
         method: "PATCH",
         headers: {
@@ -58,7 +59,7 @@ const handleStatusChange = async (userId, newStatus) => {
     const token = await currentUser.getIdToken();
 
     const response = await fetch(
-      `http://localhost:5000/api/users/${userId}/status`,
+      apiUrl(`/api/users/${userId}/status`),
       {
         method: "PATCH",
         headers: {
@@ -91,7 +92,7 @@ const handleStatusChange = async (userId, newStatus) => {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        "http://localhost:5000/api/users",
+        apiUrl("/api/users"),
         {
           headers: {
             Authorization: `Bearer ${token}`

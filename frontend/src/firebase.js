@@ -2,13 +2,23 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAYEH6q9X7D8XYbZTlGZ2QZnBDTtzGstH4",
-  authDomain: "barangay-pag-asa-health-center.firebaseapp.com",
-  projectId: "barangay-pag-asa-health-center",
-  storageBucket: "barangay-pag-asa-health-center.firebasestorage.app",
-  messagingSenderId: "371255525816",
-  appId: "1:371255525816:web:0d84501350c7459195cf4d"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
+
+const missingFirebaseVariables = Object.entries(firebaseConfig)
+  .filter(([, value]) => !value)
+  .map(([key]) => key);
+
+if (missingFirebaseVariables.length > 0) {
+  throw new Error(
+    `Missing Firebase configuration: ${missingFirebaseVariables.join(", ")}`
+  );
+}
 
 const app = initializeApp(firebaseConfig);
 

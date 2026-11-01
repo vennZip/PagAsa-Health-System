@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +29,7 @@ function Appointments() {
     const fetchServices = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/services"
+          apiUrl("/api/services")
         );
 
         const data = await response.json();
@@ -56,7 +57,7 @@ function Appointments() {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        "http://localhost:5000/api/appointments/my",
+        apiUrl("/api/appointments/my"),
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -109,7 +110,7 @@ function Appointments() {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        "http://localhost:5000/api/appointments",
+        apiUrl("/api/appointments"),
         {
           method: "POST",
           headers: {
@@ -158,7 +159,7 @@ function Appointments() {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        `http://localhost:5000/api/appointments/${appointmentId}/cancel`,
+        apiUrl(`/api/appointments/${appointmentId}/cancel`),
         {
           method: "PATCH",
           headers: {

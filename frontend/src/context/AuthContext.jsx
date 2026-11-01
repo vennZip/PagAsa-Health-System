@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { createContext, useEffect, useRef, useState } from "react";
 
 import {
@@ -28,7 +29,7 @@ export const AuthProvider = ({ children }) => {
     const token = await firebaseUser.getIdToken();
 
     const response = await fetch(
-      "http://localhost:5000/api/users/me",
+      apiUrl("/api/users/me"),
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -69,7 +70,7 @@ export const AuthProvider = ({ children }) => {
       const token = await firebaseUser.getIdToken();
 
       const response = await fetch(
-        "http://localhost:5000/api/users/register",
+        apiUrl("/api/users/register"),
         {
           method: "POST",
           headers: {
@@ -116,7 +117,7 @@ export const AuthProvider = ({ children }) => {
       const token = await firebaseUser.getIdToken();
 
       const response = await fetch(
-        "http://localhost:5000/api/users/register",
+        apiUrl("/api/users/register"),
         {
           method: "POST",
           headers: {

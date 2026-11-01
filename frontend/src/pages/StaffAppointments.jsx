@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +23,7 @@ function StaffAppointments() {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        "http://localhost:5000/api/appointments",
+        apiUrl("/api/appointments"),
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -70,7 +71,7 @@ function StaffAppointments() {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        `http://localhost:5000/api/appointments/${appointmentId}/status`,
+        apiUrl(`/api/appointments/${appointmentId}/status`),
         {
           method: "PATCH",
           headers: {
@@ -121,7 +122,7 @@ function StaffAppointments() {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        `http://localhost:5000/api/appointments/${appointmentId}/complete`,
+        apiUrl(`/api/appointments/${appointmentId}/complete`),
         {
           method: "PATCH",
           headers: {

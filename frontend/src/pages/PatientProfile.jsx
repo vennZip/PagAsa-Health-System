@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -40,7 +41,7 @@ function PatientProfile() {
 
     // Send patient information to the backend
     const response = await fetch(
-      "http://localhost:5000/api/patients",
+      apiUrl("/api/patients"),
       {
         method: "POST",
         headers: {

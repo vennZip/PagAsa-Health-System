@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
@@ -13,7 +14,7 @@ function ActivityLogs() {
     try {
       setLoading(true);
       const token = await currentUser.getIdToken();
-      const response = await fetch("http://localhost:5000/api/activity-logs", { headers: { Authorization: `Bearer ${token}` } });
+      const response = await fetch(apiUrl("/api/activity-logs"), { headers: { Authorization: `Bearer ${token}` } });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to load activity logs.");
       setLogs(data.data || []);

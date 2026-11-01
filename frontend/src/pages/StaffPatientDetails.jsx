@@ -1,3 +1,4 @@
+﻿import { apiUrl } from "../config/api";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
@@ -32,9 +33,9 @@ function StaffPatientDetails() {
       const headers = { Authorization: `Bearer ${token}` };
 
       const [patientResponse, recordsResponse, servicesResponse] = await Promise.all([
-        fetch(`http://localhost:5000/api/patients/${id}`, { headers }),
-        fetch(`http://localhost:5000/api/health-records/patient/${id}`, { headers }),
-        fetch("http://localhost:5000/api/services")
+        fetch(apiUrl(`/api/patients/${id}`), { headers }),
+        fetch(apiUrl(`/api/health-records/patient/${id}`), { headers }),
+        fetch(apiUrl("/api/services"))
       ]);
 
       const [patientData, recordsData, servicesData] = await Promise.all([
@@ -90,7 +91,7 @@ function StaffPatientDetails() {
       setRecordSuccess("");
 
       const token = await currentUser.getIdToken();
-      const response = await fetch("http://localhost:5000/api/health-records", {
+      const response = await fetch(apiUrl("/api/health-records"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
