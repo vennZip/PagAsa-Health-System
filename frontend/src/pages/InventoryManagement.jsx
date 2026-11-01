@@ -59,19 +59,19 @@ function InventoryManagement() {
     {error && <p style={{ color: "red" }}>{error}</p>}{success && <p style={{ color: "green" }}>{success}</p>}
     <h2>Add Medicine</h2>
     <form onSubmit={addMedicine}>
-      <input placeholder="Medicine name" required value={medicineForm.medicineName} onChange={(e) => setMedicineForm({ ...medicineForm, medicineName: e.target.value })} />
-      <input placeholder="Unit (e.g., tablets)" required value={medicineForm.unit} onChange={(e) => setMedicineForm({ ...medicineForm, unit: e.target.value })} />
-      <input type="number" min="0" placeholder="Starting quantity" value={medicineForm.quantity} onChange={(e) => setMedicineForm({ ...medicineForm, quantity: e.target.value })} />
-      <input type="number" min="0" placeholder="Minimum stock" value={medicineForm.minimumStock} onChange={(e) => setMedicineForm({ ...medicineForm, minimumStock: e.target.value })} />
-      <input type="date" value={medicineForm.expirationDate} onChange={(e) => setMedicineForm({ ...medicineForm, expirationDate: e.target.value })} />
+      <div><label>Medicine Name</label><input placeholder="e.g., Paracetamol" required value={medicineForm.medicineName} onChange={(e) => setMedicineForm({ ...medicineForm, medicineName: e.target.value })} /></div>
+      <div><label>Unit</label><input placeholder="e.g., tablets, bottles, boxes" required value={medicineForm.unit} onChange={(e) => setMedicineForm({ ...medicineForm, unit: e.target.value })} /></div>
+      <div><label>Starting Quantity</label><input type="number" min="0" aria-describedby="starting-quantity-help" value={medicineForm.quantity} onChange={(e) => setMedicineForm({ ...medicineForm, quantity: e.target.value })} /><small id="starting-quantity-help">Number of units currently available. Use 0 if no stock is available yet.</small></div>
+      <div><label>Low-Stock Warning Level</label><input type="number" min="0" aria-describedby="minimum-stock-help" value={medicineForm.minimumStock} onChange={(e) => setMedicineForm({ ...medicineForm, minimumStock: e.target.value })} /><small id="minimum-stock-help">The system marks this medicine as low stock at or below this number.</small></div>
+      <div><label>Expiration Date</label><input type="date" value={medicineForm.expirationDate} onChange={(e) => setMedicineForm({ ...medicineForm, expirationDate: e.target.value })} /></div>
       <button type="submit">Add Medicine</button>
     </form>
     <h2>Record Inventory Transaction</h2>
     <form onSubmit={recordTransaction}>
-      <select required value={transactionForm.medicineId} onChange={(e) => setTransactionForm({ ...transactionForm, medicineId: e.target.value })}><option value="">Select medicine</option>{medicines.map((medicine) => <option key={medicine._id} value={medicine._id}>{medicine.medicineName}</option>)}</select>
-      <select value={transactionForm.transactionType} onChange={(e) => setTransactionForm({ ...transactionForm, transactionType: e.target.value })}><option value="stock-in">Stock in</option><option value="stock-out">Stock out</option><option value="adjustment">Adjustment</option><option value="expired">Expired</option></select>
-      <input required type="number" min="1" placeholder="Quantity" value={transactionForm.quantity} onChange={(e) => setTransactionForm({ ...transactionForm, quantity: e.target.value })} />
-      <input required placeholder="Reason" value={transactionForm.reason} onChange={(e) => setTransactionForm({ ...transactionForm, reason: e.target.value })} />
+      <div><label>Medicine</label><select required value={transactionForm.medicineId} onChange={(e) => setTransactionForm({ ...transactionForm, medicineId: e.target.value })}><option value="">Select medicine</option>{medicines.map((medicine) => <option key={medicine._id} value={medicine._id}>{medicine.medicineName}</option>)}</select></div>
+      <div><label>Transaction Type</label><select value={transactionForm.transactionType} onChange={(e) => setTransactionForm({ ...transactionForm, transactionType: e.target.value })}><option value="stock-in">Stock in</option><option value="stock-out">Stock out</option><option value="adjustment">Adjustment</option><option value="expired">Expired</option></select></div>
+      <div><label>Quantity</label><input required type="number" min="1" placeholder="Number of units" value={transactionForm.quantity} onChange={(e) => setTransactionForm({ ...transactionForm, quantity: e.target.value })} /></div>
+      <div><label>Reason</label><input required placeholder="Why is the stock changing?" value={transactionForm.reason} onChange={(e) => setTransactionForm({ ...transactionForm, reason: e.target.value })} /></div>
       <button type="submit">Save Transaction</button>
     </form>
     <h2>Current Inventory</h2>

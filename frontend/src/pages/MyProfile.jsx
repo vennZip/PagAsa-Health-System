@@ -10,6 +10,7 @@ function MyProfile() {
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [profileMissing, setProfileMissing] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -26,6 +27,11 @@ function MyProfile() {
         );
 
         const data = await response.json();
+
+        if (response.status === 404) {
+          setProfileMissing(true);
+          return;
+        }
 
         if (!response.ok) {
           throw new Error(data.message || "Failed to load profile.");
@@ -57,6 +63,29 @@ function MyProfile() {
         <button onClick={() => navigate("/dashboard")}>
           Back to Dashboard
         </button>
+      </div>
+    );
+  }
+
+  if (profileMissing) {
+    return (
+      <div>
+        <div className="page-header">
+          <div>
+            <h1>My Profile</h1>
+            <p>Create your patient profile to access personalized health services.</p>
+          </div>
+        </div>
+
+        <section>
+          <h2>No patient profile yet</h2>
+          <p>
+            Add your personal, contact, and emergency information so the
+            health center can assist you properly.
+          </p>
+          <button onClick={() => navigate("/profile")}>Create My Profile</button>
+          <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+        </section>
       </div>
     );
   }

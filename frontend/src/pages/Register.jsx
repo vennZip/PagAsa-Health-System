@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
 function Register() {
@@ -55,7 +55,24 @@ function Register() {
       navigate("/dashboard", { replace: true });
 
     } catch (err) {
-      setError(err.message);
+      const errorCode = err.code || "";
+      const errorMessage = err.message?.toLowerCase() || "";
+
+      if (
+        errorCode === "auth/email-already-in-use" ||
+        errorMessage.includes("email is already") ||
+        errorMessage.includes("email already")
+      ) {
+        setError(
+          "An account already uses this email. Please log in or reset your password."
+        );
+      } else if (errorCode === "auth/invalid-email") {
+        setError("Please enter a valid email address.");
+      } else if (errorCode === "auth/weak-password") {
+        setError("Please use a stronger password with at least 6 characters.");
+      } else {
+        setError("Unable to create your account. Please try again.");
+      }
       setFormData({
         fullName: "",
         email: "",
@@ -128,6 +145,10 @@ function Register() {
         <button type="submit" disabled={loading}>
           {loading ? "Registering..." : "Register"}
         </button>
+
+        <p>
+          Already have an account? <Link to="/login">Return to login</Link>
+        </p>
       </form>
     </div></div>
   );
