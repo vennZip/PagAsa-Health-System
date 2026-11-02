@@ -23,3 +23,15 @@ export const markNotificationRead = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to update notification." });
   }
 };
+
+export const markAllNotificationsRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { userId: req.user.id, isRead: false },
+      { $set: { isRead: true, readAt: new Date() } }
+    );
+    return res.status(200).json({ success: true, message: "All notifications marked as read." });
+  } catch {
+    return res.status(500).json({ success: false, message: "Failed to update notifications." });
+  }
+};

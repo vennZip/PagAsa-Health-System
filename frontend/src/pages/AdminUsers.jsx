@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
-import { PageHeader, StatusBadge, Alert } from "../components/UI";
+import { PageHeader, StatusBadge, Alert, Pagination } from "../components/UI";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 function AdminUsers() {
   const { currentUser, userProfile } = useAuth();
@@ -12,10 +13,17 @@ function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pendingChange, setPendingChange] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [notice, setNotice] = useState("");
+  const pageSize = 10;
+  const filteredUsers = users.filter((user) => `${user.fullName} ${user.email}`.toLowerCase().includes(search.toLowerCase()));
 
   
 const handleRoleChange = async (userId, newRole) => {
   try {
+    setActionLoading(true); setError(""); setNotice("");
     const token = await currentUser.getIdToken();
 
     const response = await fetch(
@@ -36,26 +44,19 @@ const handleRoleChange = async (userId, newRole) => {
       throw new Error(result.message || "Failed to update user role.");
     }
 
-    alert("User role updated successfully.");
+    setNotice("User role updated successfully.");
+    setPendingChange(null);
     fetchUsers();
 
   } catch (error) {
-    alert(error.message);
+    setError(error.message);
     fetchUsers();
-  }
+  } finally { setActionLoading(false); }
 };
 
 const handleStatusChange = async (userId, newStatus) => {
-  const confirmed = window.confirm(
-    `Are you sure you want to change this account status to ${newStatus}?`
-  );
-
-  if (!confirmed) {
-    fetchUsers();
-    return;
-  }
-
   try {
+    setActionLoading(true); setError(""); setNotice("");
     const token = await currentUser.getIdToken();
 
     const response = await fetch(
@@ -78,13 +79,20 @@ const handleStatusChange = async (userId, newStatus) => {
       );
     }
 
-    alert("Account status updated successfully.");
+    setNotice("Account status updated successfully.");
+    setPendingChange(null);
     fetchUsers();
 
   } catch (error) {
-    alert(error.message);
+    setError(error.message);
     fetchUsers();
-  }
+  } finally { setActionLoading(false); }
+};
+
+const confirmPendingChange = () => {
+  if (!pendingChange) return;
+  if (pendingChange.type === "role") handleRoleChange(pendingChange.user._id, pendingChange.value);
+  else handleStatusChange(pendingChange.user._id, pendingChange.value);
 };
 
   const fetchUsers = async () => {
@@ -122,6 +130,7 @@ const handleStatusChange = async (userId, newStatus) => {
     if (currentUser) {
       fetchUsers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   return (
@@ -131,6 +140,7 @@ const handleStatusChange = async (userId, newStatus) => {
       {loading && <p>Loading users...</p>}
 
       {error && <Alert>{error}</Alert>}
+      {notice && <Alert type="success">{notice}</Alert>}
 
       {!loading && !error && (
         <>
@@ -147,7 +157,7 @@ const handleStatusChange = async (userId, newStatus) => {
             </thead>
 
             <tbody>
-              {users.filter((user) => `${user.fullName} ${user.email}`.toLowerCase().includes(search.toLowerCase())).map((user) => (
+              {filteredUsers.slice((page - 1) * pageSize, page * pageSize).map((user) => (
                 <tr key={user._id}>
                   <td>{user.fullName}</td>
                   <td>{user.email}</td>
@@ -155,7 +165,7 @@ const handleStatusChange = async (userId, newStatus) => {
   <select
     value={user.role}
     onChange={(e) =>
-      handleRoleChange(user._id, e.target.value)
+      setPendingChange({ type: "role", user, value: e.target.value })
     }
     disabled={user._id === userProfile?._id}
   >
@@ -169,7 +179,7 @@ const handleStatusChange = async (userId, newStatus) => {
   <select
     value={user.status}
     onChange={(e) =>
-      handleStatusChange(user._id, e.target.value)
+      setPendingChange({ type: "status", user, value: e.target.value })
     }
     disabled={user._id === userProfile?._id}
   >
@@ -180,9 +190,10 @@ const handleStatusChange = async (userId, newStatus) => {
                 </tr>
               ))}
             </tbody>
-          </table></section>
+          </table><Pagination page={page} totalItems={filteredUsers.length} pageSize={pageSize} onPageChange={setPage} /></section>
         </>
       )}
+      <ConfirmDialog open={Boolean(pendingChange)} title={pendingChange?.type === "role" ? "Change User Role" : "Change Account Status"} confirmLabel="Confirm Change" danger={pendingChange?.type === "status" && pendingChange?.value === "inactive"} busy={actionLoading} onCancel={() => setPendingChange(null)} onConfirm={confirmPendingChange}><p>Confirm this account change before it is applied.</p><div className="review-list"><p><strong>User:</strong> {pendingChange?.user?.fullName}</p><p><strong>{pendingChange?.type === "role" ? "New role" : "New status"}:</strong> {pendingChange?.value}</p></div></ConfirmDialog>
     </div>
   );
 }

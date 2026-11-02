@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { exportDateStamp, exportToExcelCsv } from "../utils/exportCsv";
+import { Pagination } from "../components/UI";
 
 function InventoryManagement() {
   const { currentUser } = useAuth();
@@ -13,6 +14,7 @@ function InventoryManagement() {
   const [success, setSuccess] = useState("");
   const [medicineForm, setMedicineForm] = useState({ medicineName: "", unit: "", quantity: 0, minimumStock: 10, expirationDate: "" });
   const [transactionForm, setTransactionForm] = useState({ medicineId: "", transactionType: "stock-in", quantity: "", reason: "" });
+  const [page, setPage] = useState(1); const pageSize = 10;
 
   const loadMedicines = useCallback(async () => {
     try {
@@ -92,7 +94,7 @@ function InventoryManagement() {
       <button type="submit">Save Transaction</button>
     </form>
     <h2>Current Inventory</h2>
-    {loading ? <p>Loading inventory...</p> : <table border="1" cellPadding="10"><thead><tr><th>Medicine</th><th>Quantity</th><th>Unit</th><th>Status</th><th>Expiration</th></tr></thead><tbody>{medicines.length ? medicines.map((medicine) => <tr key={medicine._id}><td>{medicine.medicineName}</td><td>{medicine.quantity}</td><td>{medicine.unit}</td><td>{medicine.status}</td><td>{medicine.expirationDate ? new Date(medicine.expirationDate).toLocaleDateString() : "N/A"}</td></tr>) : <tr><td colSpan="5">No medicines found.</td></tr>}</tbody></table>}
+    {loading ? <p>Loading inventory...</p> : <><table border="1" cellPadding="10"><thead><tr><th>Medicine</th><th>Quantity</th><th>Unit</th><th>Status</th><th>Expiration</th></tr></thead><tbody>{medicines.length ? medicines.slice((page - 1) * pageSize, page * pageSize).map((medicine) => <tr key={medicine._id}><td>{medicine.medicineName}</td><td>{medicine.quantity}</td><td>{medicine.unit}</td><td>{medicine.status}</td><td>{medicine.expirationDate ? new Date(medicine.expirationDate).toLocaleDateString() : "N/A"}</td></tr>) : <tr><td colSpan="5">No medicines found.</td></tr>}</tbody></table><Pagination page={page} totalItems={medicines.length} pageSize={pageSize} onPageChange={setPage} /></>}
   </div>;
 }
 export default InventoryManagement;

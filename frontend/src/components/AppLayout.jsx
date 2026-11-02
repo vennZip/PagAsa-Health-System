@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { Icon } from "./Icons";
 import NotificationToasts from "./NotificationToasts";
+import GlobalFooter from "./GlobalFooter";
+import ContactBand from "./ContactBand";
 
 const navigation = [
   ["Dashboard", "/dashboard", "dashboard", ["admin", "staff", "patient"]],
@@ -14,11 +16,10 @@ const navigation = [
   ["My Queue", "/my-queue", "queue", ["patient"]],
   ["Inventory", "/inventory", "inventory", ["admin", "staff"]],
   ["Services", "/services-management", "service", ["admin"]],
-  ["Notifications", "/notifications", "bell", ["admin", "staff", "patient"]],
+  ["Clinic Calendar", "/clinic-calendar", "calendar", ["admin", "staff"]],
   ["Activity Logs", "/activity-logs", "logs", ["admin"]],
   ["Reports", "/reports", "reports", ["admin", "staff"]],
-  ["Account Settings", "/account-settings", "profile", ["admin", "staff", "patient"]],
-  ["My Profile", "/my-profile", "profile", ["patient"]]
+  ["Profile & Settings", "/account-settings", "profile", ["admin", "staff", "patient"]],
 ];
 
 const clockFormatter = new Intl.DateTimeFormat("en-PH", {
@@ -50,7 +51,6 @@ function AppLayout({ children }) {
   const { userProfile, logout, role } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const initials = (userProfile?.fullName || "Health Center")
     .split(" ")
     .map((word) => word[0])
@@ -66,7 +66,7 @@ function AppLayout({ children }) {
     <div className="app-shell">
       <aside className={`sidebar ${isOpen ? "sidebar--open" : ""}`}>
         <div className="brand">
-          <div className="brand-mark">✚</div>
+          <div className="brand-mark" aria-hidden="true">P+</div>
           <div><strong>Barangay Pag-Asa</strong><span>Health Center</span></div>
           <button className="sidebar-close" onClick={() => setIsOpen(false)} aria-label="Close navigation"><Icon name="close" /></button>
         </div>
@@ -81,9 +81,6 @@ function AppLayout({ children }) {
               <NavLink key={to} to={to} onClick={() => setIsOpen(false)}>
                 <Icon name={icon} />
                 <span>{label}</span>
-                {to === "/notifications" && unreadCount > 0 && (
-                  <span className="notification-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
-                )}
               </NavLink>
             ))}
         </nav>
@@ -93,18 +90,20 @@ function AppLayout({ children }) {
       {isOpen && <button className="nav-scrim" onClick={() => setIsOpen(false)} aria-label="Close navigation" />}
 
       <main className="app-main">
+        <ContactBand />
         <header className="topbar">
           <button className="menu-button" onClick={() => setIsOpen(true)} aria-label="Open navigation"><Icon name="menu" /></button>
           <div><span className="topbar-kicker">Barangay Pag-Asa Health Center</span></div>
           <div className="topbar-user">
             <LiveClock />
+            <NotificationToasts />
             <div className="avatar avatar--small">{initials}</div>
           </div>
         </header>
         <div className="content-area">{children}</div>
+        <GlobalFooter />
       </main>
 
-      <NotificationToasts onUnreadCountChange={setUnreadCount} />
     </div>
   );
 }

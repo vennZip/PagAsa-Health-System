@@ -4,6 +4,7 @@ import Service from "../models/Service.js";
 import mongoose from "mongoose";
 import { logActivity } from "../utils/activityLogger.js";
 import { notifyPatient, notifyRoles } from "../utils/notificationService.js";
+import { buildAvailability } from "./scheduleController.js";
 
 // POST: Patient requests an appointment
 export const createAppointment = async (req, res) => {
@@ -66,12 +67,28 @@ export const createAppointment = async (req, res) => {
       });
     }
 
+    const availability = await buildAvailability(appointmentDate);
+    if (availability.error) {
+      return res.status(400).json({ success: false, message: availability.error });
+    }
+    if (!availability.isOpen) {
+      return res.status(409).json({ success: false, message: "The clinic is closed on the selected date. Choose an available day from the calendar." });
+    }
+    const selectedSlot = availability.slots.find((slot) => slot.time === appointmentTime);
+    if (!selectedSlot) {
+      return res.status(400).json({ success: false, message: "Choose one of the clinic's available 30-minute appointment times." });
+    }
+    if (!selectedSlot.available) {
+      return res.status(409).json({ success: false, message: "That appointment time was just taken. Please choose another available slot." });
+    }
+
     // Create appointment request
     const appointment = await Appointment.create({
       patientId: patient._id,
       serviceId,
       appointmentDate: selectedDate,
       appointmentTime,
+      slotKey: `${availability.date}#${appointmentTime}`,
       status: "pending"
     });
     await logActivity({ userId: req.user.id, action: "Requested appointment", module: "Appointments", description: "Submitted an appointment request.", targetId: appointment._id, ipAddress: req.ip });
@@ -90,6 +107,13 @@ export const createAppointment = async (req, res) => {
 
   } catch (error) {
     console.error("Create appointment error:", error.message);
+
+    if (error?.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "That appointment time was just taken. Please choose another available slot."
+      });
+    }
 
     res.status(500).json({
       success: false,
@@ -176,6 +200,7 @@ export const cancelAppointment = async (req, res) => {
     }
 
     appointment.status = "cancelled";
+    appointment.slotKey = undefined;
     await appointment.save();
     await logActivity({ userId: req.user.id, action: "Cancelled appointment", module: "Appointments", description: "Cancelled a pending appointment request.", targetId: appointment._id, ipAddress: req.ip });
     await notifyRoles(
@@ -218,10 +243,7 @@ export const getAllAppointments = async (req, res) => {
         "serviceName description category"
       )
       .populate("approvedBy", "fullName")
-      .sort({
-        appointmentDate: 1,
-        appointmentTime: 1
-      });
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -269,7 +291,8 @@ export const updateAppointmentStatus = async (req, res) => {
           status,
           remarks: remarks || "",
           approvedBy: status === "approved" ? req.user.id : null
-        }
+        },
+        ...(status === "rejected" ? { $unset: { slotKey: 1 } } : {})
       },
       {
         new: true,

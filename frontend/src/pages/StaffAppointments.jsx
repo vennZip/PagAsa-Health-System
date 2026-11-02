@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
+import { Pagination } from "../components/UI";
 
 function StaffAppointments() {
   const { currentUser } = useAuth();
@@ -15,6 +16,8 @@ function StaffAppointments() {
   const [decision, setDecision] = useState(null);
   const [completion, setCompletion] = useState(null);
   const [remarks, setRemarks] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   // Retrieve all appointments from the backend
   const fetchAppointments = useCallback(async () => {
@@ -207,7 +210,7 @@ function StaffAppointments() {
         <p>No appointment requests found.</p>
       )}
 
-      {!loading && appointments.map((appointment) => (
+      {!loading && appointments.slice((page - 1) * pageSize, page * pageSize).map((appointment) => (
         <section key={appointment._id}>
           <h3>
             {appointment.serviceId?.serviceName || "Unknown Service"}
@@ -294,6 +297,7 @@ function StaffAppointments() {
           <hr />
         </section>
       ))}
+      <Pagination page={page} totalItems={appointments.length} pageSize={pageSize} onPageChange={setPage} />
 
       {decision && (
         <div className="modal-backdrop" role="presentation">

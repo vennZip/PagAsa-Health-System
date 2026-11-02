@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { exportDateStamp, exportToExcelCsv } from "../utils/exportCsv";
+import { Pagination } from "../components/UI";
 
 function ActivityLogs() {
   const { currentUser } = useAuth();
@@ -10,6 +11,7 @@ function ActivityLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1); const pageSize = 15;
 
   const loadLogs = useCallback(async () => {
     try {
@@ -59,20 +61,10 @@ function ActivityLogs() {
       {loading ? (
         <p>Loading activity logs...</p>
       ) : (
-        <table border="1" cellPadding="10">
+        <><table border="1" cellPadding="10">
           <thead><tr><th>Date and Time</th><th>User</th><th>Module</th><th>Action</th><th>Description</th></tr></thead>
-          <tbody>
-            {logs.length ? logs.map((log) => (
-              <tr key={log._id}>
-                <td>{new Date(log.createdAt).toLocaleString()}</td>
-                <td>{log.userId?.fullName || "Unknown user"}</td>
-                <td>{log.module}</td>
-                <td>{log.action}</td>
-                <td>{log.description}</td>
-              </tr>
-            )) : <tr><td colSpan="5">No activity logs found.</td></tr>}
-          </tbody>
-        </table>
+          <tbody>{logs.length ? logs.slice((page - 1) * pageSize, page * pageSize).map((log) => <tr key={log._id}><td>{new Date(log.createdAt).toLocaleString()}</td><td>{log.userId?.fullName || "Unknown user"}</td><td>{log.module}</td><td>{log.action}</td><td>{log.description}</td></tr>) : <tr><td colSpan="5">No activity logs found.</td></tr>}</tbody>
+        </table><Pagination page={page} totalItems={logs.length} pageSize={pageSize} onPageChange={setPage} /></>
       )}
     </div>
   );

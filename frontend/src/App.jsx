@@ -4,7 +4,6 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import PatientDashboard from "./pages/PatientDashboard";
 import PatientProfile from "./pages/PatientProfile";
-import MyProfile from "./pages/MyProfile";
 import EditProfile from "./pages/EditProfile";
 import AccountSettings from "./pages/AccountSettings";
 import Appointments from "./pages/Appointments";
@@ -17,10 +16,10 @@ import StaffPatientDetails from "./pages/StaffPatientDetails";
 import QueueManagement from "./pages/QueueManagement";
 import MyQueueStatus from "./pages/MyQueueStatus";
 import InventoryManagement from "./pages/InventoryManagement";
-import MyNotifications from "./pages/MyNotifications";
 import ServiceManagement from "./pages/ServiceManagement";
 import ActivityLogs from "./pages/ActivityLogs";
 import ReportsAnalytics from "./pages/ReportsAnalytics";
+import ClinicCalendar from "./pages/ClinicCalendar";
 import AppLayout from "./components/AppLayout";
 
 import { useAuth } from "./context/useAuth";
@@ -126,11 +125,7 @@ function AppContent() {
       {/* View My Profile */}
       <Route
         path="/my-profile"
-        element={
-          <ProtectedRoute allowedRoles={["patient"]}>
-            <MyProfile />
-          </ProtectedRoute>
-        }
+        element={<Navigate to="/account-settings" replace />}
       />
 
       {/* Edit My Profile */}
@@ -201,7 +196,8 @@ function AppContent() {
         }
       />
       <Route path="/inventory" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><InventoryManagement /></ProtectedRoute>} />
-      <Route path="/notifications" element={<ProtectedRoute allowedRoles={["patient", "staff", "admin"]}><MyNotifications /></ProtectedRoute>} />
+      <Route path="/notifications" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/clinic-calendar" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><ClinicCalendar /></ProtectedRoute>} />
       <Route path="/services-management" element={<ProtectedRoute allowedRoles={["admin"]}><ServiceManagement /></ProtectedRoute>} />
       <Route path="/activity-logs" element={<ProtectedRoute allowedRoles={["admin"]}><ActivityLogs /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><ReportsAnalytics /></ProtectedRoute>} />

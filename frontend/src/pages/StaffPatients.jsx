@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
+import { Pagination } from "../components/UI";
 
 function StaffPatients() {
   const { currentUser } = useAuth();
@@ -11,6 +12,8 @@ function StaffPatients() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const fetchPatients = async () => {
     try {
@@ -47,8 +50,10 @@ function StaffPatients() {
 
   useEffect(() => {
     if (currentUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchPatients();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   // Search patients by name or patient number
@@ -114,7 +119,7 @@ function StaffPatients() {
 
             <tbody>
               {filteredPatients.length > 0 ? (
-                filteredPatients.map((patient) => (
+                filteredPatients.slice((page - 1) * pageSize, page * pageSize).map((patient) => (
                   <tr key={patient._id}>
                     <td>{patient.patientNumber}</td>
 
@@ -144,6 +149,7 @@ function StaffPatients() {
               )}
             </tbody>
           </table>
+          <Pagination page={page} totalItems={filteredPatients.length} pageSize={pageSize} onPageChange={setPage} />
         </>
       )}
     </div>

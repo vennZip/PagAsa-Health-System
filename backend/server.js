@@ -13,6 +13,8 @@ import medicineRoutes from "./routes/medicineRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import activityLogRoutes from "./routes/activityLogRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import scheduleRoutes from "./routes/scheduleRoutes.js";
+import announcementRoutes from "./routes/announcementRoutes.js";
 
 dotenv.config();
 
@@ -35,7 +37,7 @@ app.use(cors({
     return callback(new Error("Origin is not allowed by CORS."));
   }
 }));
-app.use(express.json({ limit: "100kb" }));
+app.use(express.json({ limit: "2mb" }));
 
 app.use("/api/patients", patientRoutes);
 app.use("/api/users", userRoutes);
@@ -47,6 +49,8 @@ app.use("/api/medicines", medicineRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/schedule", scheduleRoutes);
+app.use("/api/announcements", announcementRoutes);
 
 // Test route
 app.get("/", (req, res) => {

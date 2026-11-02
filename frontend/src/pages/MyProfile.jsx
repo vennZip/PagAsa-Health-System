@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
 
-function MyProfile() {
+function MyProfile({ embedded = false }) {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -58,7 +58,7 @@ function MyProfile() {
   if (error) {
     return (
       <div>
-        <h1>My Profile</h1>
+        {!embedded && <h1>My Profile</h1>}
         <p style={{ color: "red" }}>{error}</p>
         <button onClick={() => navigate("/dashboard")}>
           Back to Dashboard
@@ -70,12 +70,12 @@ function MyProfile() {
   if (profileMissing) {
     return (
       <div>
-        <div className="page-header">
+        {!embedded && <div className="page-header">
           <div>
             <h1>My Profile</h1>
             <p>Create your patient profile to access personalized health services.</p>
           </div>
-        </div>
+        </div>}
 
         <section>
           <h2>No patient profile yet</h2>
@@ -84,7 +84,7 @@ function MyProfile() {
             health center can assist you properly.
           </p>
           <button onClick={() => navigate("/profile")}>Create My Profile</button>
-          <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+          {!embedded && <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>}
         </section>
       </div>
     );
@@ -102,7 +102,7 @@ function MyProfile() {
 
   return (
     <div>
-      <h1>My Profile</h1>
+      <h2>My Patient Profile</h2>
       <p>View your registered personal information.</p>
 
       <hr />
@@ -143,9 +143,9 @@ function MyProfile() {
     Edit My Profile
   </button>
 
-  <button onClick={() => navigate("/dashboard")}>
+  {!embedded && <button onClick={() => navigate("/dashboard")}>
     Back to Dashboard
-  </button>
+  </button>}
 </div>
     </div>
   );

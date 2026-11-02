@@ -16,6 +16,8 @@ import {
 
 import { auth } from "../firebase";
 
+// Context and provider intentionally share this module.
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {

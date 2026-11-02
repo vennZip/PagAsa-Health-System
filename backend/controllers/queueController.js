@@ -52,6 +52,7 @@ export const getEligibleQueueAppointments = async (req, res) => {
       .filter(Boolean);
     const existingTickets = await QueueTicket.find({
       queueDate: start,
+      isActive: true,
       patientId: { $in: patientIds }
     }).select("patientId");
     const ticketedPatients = new Set(
@@ -111,13 +112,14 @@ export const issueQueueTicket = async (req, res) => {
 
     const existingTicket = await QueueTicket.findOne({
       patientId,
-      queueDate
+      queueDate,
+      isActive: true
     });
 
     if (existingTicket) {
       return res.status(409).json({
         success: false,
-        message: "This patient has already received a queue ticket today.",
+        message: "This patient already has an active queue ticket today.",
         data: existingTicket
       });
     }

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { Pagination } from "../components/UI";
 
 function StaffPatientDetails() {
   const { id } = useParams();
@@ -16,6 +17,7 @@ function StaffPatientDetails() {
   const [recordError, setRecordError] = useState("");
   const [recordSuccess, setRecordSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [recordPage, setRecordPage] = useState(1); const recordPageSize = 6;
   const [formData, setFormData] = useState({
     serviceId: "",
     visitDate: new Date().toISOString().split("T")[0],
@@ -271,7 +273,7 @@ function StaffPatientDetails() {
       {healthRecords.length === 0 ? (
         <p>No health records found for this patient.</p>
       ) : (
-        healthRecords.map((record) => (
+        healthRecords.slice((recordPage - 1) * recordPageSize, recordPage * recordPageSize).map((record) => (
           <section key={record._id}>
             <p><strong>Visit Date:</strong> {formatDate(record.visitDate)}</p>
             <p><strong>Service:</strong> {record.serviceId?.serviceName || "N/A"}</p>
@@ -282,7 +284,7 @@ function StaffPatientDetails() {
             <hr />
           </section>
         ))
-      )}
+      )}<Pagination page={recordPage} totalItems={healthRecords.length} pageSize={recordPageSize} onPageChange={setRecordPage} />
     </div>
   );
 }

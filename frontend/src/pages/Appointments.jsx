@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
+import { Pagination } from "../components/UI";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 function Appointments() {
   const { currentUser } = useAuth();
@@ -17,6 +19,13 @@ function Appointments() {
   const [appointmentError, setAppointmentError] = useState("");
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState("");
+  const [availability, setAvailability] = useState(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [servicePage, setServicePage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const pageSize = 6;
 
   const [formData, setFormData] = useState({
     serviceId: "",
@@ -107,11 +116,30 @@ function Appointments() {
   }, [currentUser, fetchAppointments]);
 
   const handleChange = (e) => {
+    if (e.target.name === "appointmentDate") setAvailability(null);
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
+
+  useEffect(() => {
+    if (!formData.appointmentDate || !currentUser) return undefined;
+    let active = true;
+    const loadAvailability = async () => {
+      try {
+        setAvailabilityLoading(true);
+        const token = await currentUser.getIdToken();
+        const response = await fetch(apiUrl(`/api/schedule/availability?date=${formData.appointmentDate}`), { cache: "no-store", headers: { Authorization: `Bearer ${token}` } });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        if (active) { setAvailability(data.data); setFormData((current) => ({ ...current, appointmentTime: "" })); }
+      } catch (err) { if (active) { setAvailability(null); setError(err.message || "Unable to load available times."); } }
+      finally { if (active) setAvailabilityLoading(false); }
+    };
+    loadAvailability();
+    return () => { active = false; };
+  }, [formData.appointmentDate, currentUser]);
 
   // Submit appointment request
   const handleSubmit = async (e) => {
@@ -164,18 +192,14 @@ function Appointments() {
   };
 
   // Cancel a pending appointment
-  const handleCancel = async (appointmentId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to cancel this appointment?"
-    );
-
-    if (!confirmed) return;
-
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
     try {
+      setCancelLoading(true);
       const token = await currentUser.getIdToken();
 
       const response = await fetch(
-        apiUrl(`/api/appointments/${appointmentId}/cancel`),
+        apiUrl(`/api/appointments/${cancelTarget._id}/cancel`),
         {
           method: "PATCH",
           headers: {
@@ -192,13 +216,15 @@ function Appointments() {
         );
       }
 
-      alert("Appointment cancelled successfully!");
-
+      setSuccess("Appointment cancelled successfully!");
+      setCancelTarget(null);
       await fetchAppointments();
 
     } catch (err) {
       console.error("Cancel appointment error:", err);
-      alert(err.message || "Unable to cancel appointment.");
+      setAppointmentError(err.message || "Unable to cancel appointment.");
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -225,7 +251,7 @@ function Appointments() {
         <p>No available services at the moment.</p>
       )}
 
-      {!loading && services.map((service) => (
+      {!loading && services.slice((servicePage - 1) * pageSize, servicePage * pageSize).map((service) => (
         <section key={service._id}>
           <h3>{service.serviceName}</h3>
           <p>{service.description}</p>
@@ -233,6 +259,7 @@ function Appointments() {
           <p>Status: {service.availability}</p>
         </section>
       ))}
+      <Pagination page={servicePage} totalItems={services.length} pageSize={pageSize} onPageChange={setServicePage} />
 
       <hr />
 
@@ -290,16 +317,18 @@ function Appointments() {
 
         <br /><br />
 
-        <label>Preferred Appointment Time</label>
+        <label>Available 30-Minute Appointment Time</label>
         <br />
 
-        <input
-          type="time"
+        <select
           name="appointmentTime"
           value={formData.appointmentTime}
           onChange={handleChange}
+          disabled={availabilityLoading || !availability?.isOpen}
           required
-        />
+        ><option value="">{availabilityLoading ? "Checking available times..." : "Choose an available time"}</option>{availability?.slots.filter((slot) => slot.available).map((slot) => <option key={slot.time} value={slot.time}>{slot.time}</option>)}</select>
+        {formData.appointmentDate && availability && !availability.isOpen && <p className="alert alert--error">The clinic is closed on this date. Please choose another day.</p>}
+        {availability?.isOpen && !availability.slots.some((slot) => slot.available) && <p className="alert alert--error">This date is fully booked. Please choose another day.</p>}
 
         <br /><br />
 
@@ -310,6 +339,8 @@ function Appointments() {
             loading ||
             appointmentsLoading ||
             services.length === 0
+            || !availability?.isOpen
+            || !formData.appointmentTime
           }
         >
           {saving ? "Submitting..." : "Submit Appointment Request"}
@@ -339,7 +370,7 @@ function Appointments() {
           <p>You have no appointment requests yet.</p>
         )}
 
-      {!appointmentsLoading && appointments.map((appointment) => (
+      {!appointmentsLoading && appointments.slice((historyPage - 1) * pageSize, historyPage * pageSize).map((appointment) => (
         <section key={appointment._id}>
           <h3>
             {appointment.serviceId?.serviceName || "Unknown Service"}
@@ -368,7 +399,7 @@ function Appointments() {
           
 {appointment.status === "pending" && (
   <button
-    onClick={() => handleCancel(appointment._id)}
+    onClick={() => setCancelTarget(appointment)}
   >
     Cancel Appointment
   </button>
@@ -378,6 +409,9 @@ function Appointments() {
           <hr />
         </section>
       ))}
+      <Pagination page={historyPage} totalItems={appointments.length} pageSize={pageSize} onPageChange={setHistoryPage} />
+
+      <ConfirmDialog open={Boolean(cancelTarget)} title="Cancel Appointment" confirmLabel="Yes, Cancel Appointment" danger busy={cancelLoading} onCancel={() => setCancelTarget(null)} onConfirm={handleCancel}><p>Are you sure you want to cancel this pending appointment?</p><div className="review-list"><p><strong>Service:</strong> {cancelTarget?.serviceId?.serviceName || "Health center service"}</p><p><strong>Date:</strong> {formatDate(cancelTarget?.appointmentDate)}</p><p><strong>Time:</strong> {cancelTarget?.appointmentTime}</p></div></ConfirmDialog>
 
       <button onClick={() => navigate("/dashboard")}>
         Back to Dashboard

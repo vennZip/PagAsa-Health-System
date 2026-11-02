@@ -6,6 +6,7 @@ import {
   playNotificationChime,
   setNotificationSoundEnabled
 } from "../utils/notificationSound";
+import MyProfile from "./MyProfile";
 
 function AccountSettings() {
   const { theme, setTheme } = useTheme();
@@ -14,7 +15,8 @@ function AccountSettings() {
     currentUser,
     userProfile,
     changeEmail,
-    changePassword
+    changePassword,
+    role
   } = useAuth();
   const [newEmail, setNewEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
@@ -136,10 +138,12 @@ function AccountSettings() {
     <div>
       <div className="page-header">
         <div>
-          <h1>Account Settings</h1>
-          <p>Manage the email address used to sign in to your account.</p>
+          <h1>Profile & Settings</h1>
+          <p>View your profile and manage your account preferences in one place.</p>
         </div>
       </div>
+
+      {role === "patient" && <MyProfile embedded />}
 
       <section>
         <h2>Appearance</h2>

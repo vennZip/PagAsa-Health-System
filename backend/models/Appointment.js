@@ -25,6 +25,12 @@ const appointmentSchema = new mongoose.Schema(
       trim: true
     },
 
+    slotKey: {
+      type: String,
+      trim: true,
+      default: undefined
+    },
+
     status: {
       type: String,
       enum: [
@@ -53,6 +59,11 @@ const appointmentSchema = new mongoose.Schema(
     timestamps: true,
     collection: "appointments"
   }
+);
+
+appointmentSchema.index(
+  { slotKey: 1 },
+  { unique: true, sparse: true, name: "unique_active_appointment_slot" }
 );
 
 const Appointment = mongoose.model(

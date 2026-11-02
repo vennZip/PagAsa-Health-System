@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { Pagination } from "../components/UI";
 
 function QueueManagement() {
   const { currentUser } = useAuth();
@@ -15,19 +16,20 @@ function QueueManagement() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [queuePage, setQueuePage] = useState(1); const [eligiblePage, setEligiblePage] = useState(1); const pageSize = 10;
 
-  const fetchQueueData = useCallback(async () => {
+  const fetchQueueData = useCallback(async (silent = false) => {
     if (!currentUser) return;
 
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError("");
 
       const token = await currentUser.getIdToken();
       const headers = { Authorization: `Bearer ${token}` };
       const [appointmentsResponse, queueResponse] = await Promise.all([
-        fetch(apiUrl("/api/queue/eligible-appointments"), { headers }),
-        fetch(apiUrl("/api/queue"), { headers })
+        fetch(apiUrl("/api/queue/eligible-appointments"), { cache: "no-store", headers }),
+        fetch(apiUrl("/api/queue"), { cache: "no-store", headers })
       ]);
 
       const [appointmentsData, queueData] = await Promise.all([
@@ -48,7 +50,7 @@ function QueueManagement() {
     } catch (err) {
       setError(err.message || "Unable to load queue information.");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [currentUser]);
 
@@ -56,6 +58,15 @@ function QueueManagement() {
     // The data request updates state after its asynchronous API calls finish.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchQueueData();
+    const interval = window.setInterval(() => fetchQueueData(true), 10000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") fetchQueueData(true);
+    };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [fetchQueueData]);
 
   const filteredAppointments = eligibleAppointments.filter((appointment) => {
@@ -161,7 +172,7 @@ function QueueManagement() {
       ) : queueTickets.length === 0 ? (
         <p>No tickets have been issued today.</p>
       ) : (
-        <table border="1" cellPadding="10">
+        <><table border="1" cellPadding="10">
           <thead>
             <tr>
               <th>Queue No.</th>
@@ -173,7 +184,7 @@ function QueueManagement() {
             </tr>
           </thead>
           <tbody>
-            {queueTickets.map((ticket) => (
+            {queueTickets.slice((queuePage - 1) * pageSize, queuePage * pageSize).map((ticket) => (
               <tr key={ticket._id}>
                 <td>{ticket.queueNumber}</td>
                 <td>{ticket.patientId?.userId?.fullName || "N/A"}</td>
@@ -248,7 +259,7 @@ function QueueManagement() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table><Pagination page={queuePage} totalItems={queueTickets.length} pageSize={pageSize} onPageChange={setQueuePage} /></>
       )}
 
       <hr />
@@ -263,7 +274,7 @@ function QueueManagement() {
       />
 
       {!loading && (
-        <table border="1" cellPadding="10">
+        <><table border="1" cellPadding="10">
           <thead>
             <tr>
               <th>Patient Number</th>
@@ -276,7 +287,7 @@ function QueueManagement() {
           </thead>
           <tbody>
             {filteredAppointments.length > 0 ? (
-              filteredAppointments.map((appointment) => {
+              filteredAppointments.slice((eligiblePage - 1) * pageSize, eligiblePage * pageSize).map((appointment) => {
                 const patient = appointment.patientId;
                 return (
                   <tr key={appointment._id}>
@@ -302,7 +313,7 @@ function QueueManagement() {
               </tr>
             )}
           </tbody>
-        </table>
+        </table><Pagination page={eligiblePage} totalItems={filteredAppointments.length} pageSize={pageSize} onPageChange={setEligiblePage} /></>
       )}
 
       {ticketPanel && (
