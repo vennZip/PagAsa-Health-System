@@ -5,6 +5,7 @@ import { Icon } from "./Icons";
 import NotificationToasts from "./NotificationToasts";
 import GlobalFooter from "./GlobalFooter";
 import ContactBand from "./ContactBand";
+import HealthCrossLogo from "./HealthCrossLogo";
 
 const navigation = [
   ["Dashboard", "/dashboard", "dashboard", ["admin", "staff", "patient"]],
@@ -66,7 +67,7 @@ function AppLayout({ children }) {
     <div className="app-shell">
       <aside className={`sidebar ${isOpen ? "sidebar--open" : ""}`}>
         <div className="brand">
-          <div className="brand-mark" aria-hidden="true">P+</div>
+          <HealthCrossLogo className="brand-mark" />
           <div><strong>Barangay Pag-Asa</strong><span>Health Center</span></div>
           <button className="sidebar-close" onClick={() => setIsOpen(false)} aria-label="Close navigation"><Icon name="close" /></button>
         </div>

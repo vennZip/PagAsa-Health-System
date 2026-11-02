@@ -45,14 +45,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .brand-mark {
   width: 42px;
   height: 42px;
-  color: var(--pg-white);
-  background: var(--pg-teal-700);
+  padding: 0;
+  background: transparent;
   border: 0;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -.04em;
+  border-radius: 50%;
 }
+.health-cross-logo__ring { fill: rgba(255, 255, 255, .08); stroke: rgba(255, 255, 255, .72); stroke-width: 2; }
+.health-cross-logo__field { fill: var(--pg-teal-600); }
+.health-cross-logo__cross { fill: #fff; }
 .brand strong { color: var(--pg-navy-950); font-size: 14px; line-height: 1.25; }
 .brand span, .user-card span { color: var(--pg-muted); }
 .user-card {
@@ -233,7 +233,7 @@ tbody tr:hover td { background: #f5fafb; }
 .auth-brand-video { object-fit: cover; }
 .auth-brand-overlay { background: linear-gradient(180deg, rgba(4, 31, 50, .55), rgba(4, 31, 50, .9)); }
 .auth-brand-content { position: relative; z-index: 1; text-align: center; }
-.auth-brand-mark { margin-bottom: 1.25rem; color: #fff; font-size: 4.5rem; font-weight: 800; line-height: 1; }
+.auth-brand-mark { display: block; width: 6rem; height: 6rem; margin: 0 auto 1.25rem; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .22)); }
 .auth-brand-content h1 { margin: 0 0 .75rem; color: #fff; font-size: 1.625rem; }
 .auth-brand-content p { margin: 0; color: rgba(255, 255, 255, .86); font-style: italic; }
 .auth-brand-content span { display: inline-block; margin-top: 2rem; padding: .5rem 1.25rem; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25); border-radius: 6px; color: #fff; font-size: .75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }

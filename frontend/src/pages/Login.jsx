@@ -120,6 +120,11 @@ function Login() {
         setError(
           "Your account has been deactivated. Please contact the administrator."
         );
+      } else if (
+        errorMessage.includes("session") ||
+        errorMessage.includes("signed in")
+      ) {
+        setError("Your previous session could not be replaced. Please try again.");
       } else {
         setError("Invalid email or password.");
       }

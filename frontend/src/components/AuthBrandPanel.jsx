@@ -1,3 +1,5 @@
+import HealthCrossLogo from "./HealthCrossLogo";
+
 function AuthBrandPanel() {
   return (
     <aside className="auth-brand-panel" aria-label="Barangay Pag-Asa Health Center">
@@ -14,7 +16,7 @@ function AuthBrandPanel() {
       </video>
       <div className="auth-brand-overlay" aria-hidden="true" />
       <div className="auth-brand-content">
-        <div className="auth-brand-mark" aria-hidden="true">P+</div>
+        <HealthCrossLogo className="auth-brand-mark" />
         <h1>Barangay Pag-Asa<br />Health Center</h1>
         <p>“Caring for you, beyond cure.”</p>
         <span>Community Health &amp; Wellness</span>

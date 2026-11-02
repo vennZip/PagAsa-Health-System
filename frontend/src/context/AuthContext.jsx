@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }) => {
   const [hasPatientProfile, setHasPatientProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const registrationInProgress = useRef(false);
+  const loginInProgress = useRef(false);
 
   // Retrieve the user's MongoDB profile
   const fetchPatientProfileStatus = useCallback(async (firebaseUser, profile) => {
@@ -147,15 +148,16 @@ export const AuthProvider = ({ children }) => {
 
   // Login an existing account
   const login = async (email, password) => {
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-
-    const firebaseUser = userCredential.user;
+    loginInProgress.current = true;
 
     try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const firebaseUser = userCredential.user;
       const token = await firebaseUser.getIdToken();
 
       const response = await fetch(
@@ -184,6 +186,7 @@ export const AuthProvider = ({ children }) => {
 
       // Retrieve the actual MongoDB role and account status
       await fetchUserProfile(firebaseUser);
+      setCurrentUser(firebaseUser);
 
       return firebaseUser;
 
@@ -194,6 +197,8 @@ export const AuthProvider = ({ children }) => {
       setUserProfile(null);
 
       throw error;
+    } finally {
+      loginInProgress.current = false;
     }
   };
 
@@ -251,7 +256,10 @@ export const AuthProvider = ({ children }) => {
       async (user) => {
         // Firebase signs in a newly created account before its backend
         // profile exists. Registration completes that synchronization.
-        if (user && registrationInProgress.current) {
+        if (
+          user &&
+          (registrationInProgress.current || loginInProgress.current)
+        ) {
           return;
         }
 
