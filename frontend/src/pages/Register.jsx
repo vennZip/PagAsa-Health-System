@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { Icon } from "../components/Icons";
 
 const S = {
   page: {
@@ -96,6 +97,8 @@ function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const fullNameInputRef = useRef(null);
   const passwordInputRef = useRef(null);
 
@@ -162,7 +165,7 @@ function Register() {
   };
 
   return (
-    <div style={S.page}>
+    <div style={S.page} className="auth-page-shell">
       {/* Branding panel */}
       <div style={S.panel} className="auth-brand-panel">
         <div style={S.cross}>P+</div>
@@ -172,8 +175,8 @@ function Register() {
       </div>
 
       {/* Form side */}
-      <div style={S.formSide}>
-        <div style={S.card}>
+      <div style={S.formSide} className="auth-form-side">
+        <div style={S.card} className="auth-form-card">
           <h2 style={S.cardTitle}>Create an account</h2>
           <p style={S.cardSub}>Join the health center patient portal today.</p>
 
@@ -203,28 +206,42 @@ function Register() {
               </div>
 
               <div>
-                <label>Password</label>
-                <input
-                  ref={passwordInputRef}
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  minLength="6"
-                  required
-                />
+                <label htmlFor="register-password">Password</label>
+                <div className="password-input-wrap">
+                  <input
+                    id="register-password"
+                    ref={passwordInputRef}
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    autoComplete="new-password"
+                    minLength="6"
+                    required
+                  />
+                  <button type="button" className="password-toggle" aria-pressed={showPassword} aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)}>
+                    <Icon name={showPassword ? "eyeOff" : "eye"} size={20} />
+                  </button>
+                </div>
               </div>
 
               <div>
-                <label>Confirm Password</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  minLength="6"
-                  required
-                />
+                <label htmlFor="register-confirm-password">Confirm Password</label>
+                <div className="password-input-wrap">
+                  <input
+                    id="register-confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    autoComplete="new-password"
+                    minLength="6"
+                    required
+                  />
+                  <button type="button" className="password-toggle" aria-pressed={showConfirmPassword} aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"} onClick={() => setShowConfirmPassword((visible) => !visible)}>
+                    <Icon name={showConfirmPassword ? "eyeOff" : "eye"} size={20} />
+                  </button>
+                </div>
               </div>
 
               {error && <p className="alert alert--error" style={{ margin: "10px 0" }}>{error}</p>}

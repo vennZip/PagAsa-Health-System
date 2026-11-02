@@ -21,6 +21,7 @@ import ActivityLogs from "./pages/ActivityLogs";
 import ReportsAnalytics from "./pages/ReportsAnalytics";
 import ClinicCalendar from "./pages/ClinicCalendar";
 import AppLayout from "./components/AppLayout";
+import ScrollManager from "./components/ScrollManager";
 
 import { useAuth } from "./context/useAuth";
 
@@ -224,6 +225,7 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollManager />
       <AppContent />
     </BrowserRouter>
   );

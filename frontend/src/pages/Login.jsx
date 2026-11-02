@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate, Link } from "react-router-dom";
+import { Icon } from "../components/Icons";
 
 const S = {
   page: {
@@ -88,6 +89,7 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -157,7 +159,7 @@ function Login() {
   };
 
   return (
-    <div style={S.page}>
+    <div style={S.page} className="auth-page-shell">
       {/* Branding panel */}
       <div style={S.panel} className="auth-brand-panel">
         <div style={S.cross}>P+</div>
@@ -167,8 +169,8 @@ function Login() {
       </div>
 
       {/* Form side */}
-      <div style={S.formSide}>
-        <div style={S.card}>
+      <div style={S.formSide} className="auth-form-side">
+        <div style={S.card} className="auth-form-card">
           <h2 style={S.cardTitle}>Welcome back</h2>
           <p style={S.cardSub}>Sign in to access your health center account.</p>
 
@@ -186,13 +188,20 @@ function Login() {
               </div>
 
               <div>
-                <label>Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <label htmlFor="login-password">Password</label>
+                <div className="password-input-wrap">
+                  <input
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button type="button" className="password-toggle" aria-pressed={showPassword} aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)}>
+                    <Icon name={showPassword ? "eyeOff" : "eye"} size={20} />
+                  </button>
+                </div>
                 <button
                   className="auth-link-button"
                   type="button"
