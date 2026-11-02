@@ -5,6 +5,21 @@ import { useAuth } from "../context/useAuth";
 import { exportDateStamp, exportToExcelCsv } from "../utils/exportCsv";
 import { Pagination } from "../components/UI";
 
+const EMPTY_MEDICINE_FORM = {
+  medicineName: "",
+  unit: "",
+  quantity: 0,
+  minimumStock: 10,
+  expirationDate: ""
+};
+
+const EMPTY_TRANSACTION_FORM = {
+  medicineId: "",
+  transactionType: "stock-in",
+  quantity: "",
+  reason: ""
+};
+
 function InventoryManagement() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -12,8 +27,8 @@ function InventoryManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [medicineForm, setMedicineForm] = useState({ medicineName: "", unit: "", quantity: 0, minimumStock: 10, expirationDate: "" });
-  const [transactionForm, setTransactionForm] = useState({ medicineId: "", transactionType: "stock-in", quantity: "", reason: "" });
+  const [medicineForm, setMedicineForm] = useState(EMPTY_MEDICINE_FORM);
+  const [transactionForm, setTransactionForm] = useState(EMPTY_TRANSACTION_FORM);
   const [page, setPage] = useState(1); const pageSize = 10;
 
   const loadMedicines = useCallback(async () => {
@@ -41,18 +56,23 @@ function InventoryManagement() {
       if (!response.ok) throw new Error(data.message || "Inventory action failed.");
       setSuccess(message || data.message);
       await loadMedicines();
-    } catch (err) { setError(err.message); }
+      return true;
+    } catch (err) {
+      setError(err.message);
+      return false;
+    }
   };
 
-  const addMedicine = (event) => {
+  const addMedicine = async (event) => {
     event.preventDefault();
-    submit("/api/medicines", "POST", medicineForm, "Medicine added successfully.");
+    const added = await submit("/api/medicines", "POST", medicineForm, "Medicine added successfully.");
+    if (added) setMedicineForm(EMPTY_MEDICINE_FORM);
   };
 
-  const recordTransaction = (event) => {
+  const recordTransaction = async (event) => {
     event.preventDefault();
-    submit(`/api/medicines/${transactionForm.medicineId}/transactions`, "POST", { ...transactionForm, quantity: Number(transactionForm.quantity) }, "Inventory updated successfully.");
-    setTransactionForm({ medicineId: "", transactionType: "stock-in", quantity: "", reason: "" });
+    const recorded = await submit(`/api/medicines/${transactionForm.medicineId}/transactions`, "POST", { ...transactionForm, quantity: Number(transactionForm.quantity) }, "Inventory updated successfully.");
+    if (recorded) setTransactionForm(EMPTY_TRANSACTION_FORM);
   };
 
   const exportInventory = () => {

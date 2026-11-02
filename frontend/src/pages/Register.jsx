@@ -302,12 +302,6 @@ function Register() {
           </section>
         </div>
       )}
-
-      <style>{`
-        @media (max-width: 820px) {
-          .auth-brand-panel { display: none !important; }
-        }
-      `}</style>
     </div>
   );
 }
