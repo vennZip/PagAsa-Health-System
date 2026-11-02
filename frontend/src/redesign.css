@@ -218,10 +218,8 @@ tbody tr:hover td { background: #f5fafb; }
   color: #fff;
   background: var(--pg-teal-700) !important;
   border-radius: 6px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .06em;
 }
+.footer-icon svg { display: block; fill: currentColor; }
 .footer-lower { background: #0d4058; }
 .footer-feedback { border: 0; border-radius: 0; box-shadow: none; }
 .footer-copyright { background: #06263a; }

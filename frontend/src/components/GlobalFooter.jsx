@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { apiUrl } from "../config/api";
 import { useAuth } from "../context/useAuth";
+import { Icon } from "./Icons";
 
 export default function GlobalFooter() {
   const { currentUser } = useAuth();
@@ -28,9 +29,9 @@ export default function GlobalFooter() {
   return <footer className="global-footer">
     <div className="footer-heading"><h2>Get in Touch</h2><p>Contact the health center for appointments, inquiries, or urgent guidance.</p></div>
     <div className="footer-contact-grid">
-      <article><div className="footer-icon footer-icon--blue" aria-hidden="true">CALL</div><h3>Call Us</h3><p><a className="footer-contact-link" href="tel:+639000000000">0900 000 0000</a> <small>(temporary)</small></p><p>Emergency assistance: <strong>911</strong></p></article>
-      <article><div className="footer-icon footer-icon--green" aria-hidden="true">MAIL</div><h3>Email Us</h3><p><a className="footer-contact-link" href="mailto:mysupragotnoheadlights19@gmail.com">mysupragotnoheadlights19@gmail.com</a></p><p><small>Temporary contact email</small></p></article>
-      <article><div className="footer-icon footer-icon--purple" aria-hidden="true">VISIT</div><h3>Visit Us</h3><p>Barangay Pag-Asa Health Center</p><p>Visit during the opening hours shown in the clinic calendar.</p></article>
+      <article><div className="footer-icon footer-icon--blue" aria-hidden="true"><Icon name="phone" size={27} /></div><h3>Call Us</h3><p><a className="footer-contact-link" href="tel:+639000000000">0900 000 0000</a> <small>(temporary)</small></p><p>Emergency assistance: <strong>911</strong></p></article>
+      <article><div className="footer-icon footer-icon--green" aria-hidden="true"><Icon name="mail" size={27} /></div><h3>Email Us</h3><p><a className="footer-contact-link" href="mailto:mysupragotnoheadlights19@gmail.com">mysupragotnoheadlights19@gmail.com</a></p><p><small>Temporary contact email</small></p></article>
+      <article><div className="footer-icon footer-icon--purple" aria-hidden="true"><Icon name="location" size={27} /></div><h3>Visit Us</h3><p><a className="footer-contact-link" href="https://www.google.com/maps/search/?api=1&query=4CJP%2B53X%2C%20National%20Rd%2C%20Liliw%2C%204004%20Laguna" target="_blank" rel="noreferrer">4CJP+53X, National Rd, Liliw, 4004 Laguna</a></p><p>Visit during the opening hours shown in the clinic calendar.</p></article>
     </div>
     <div className="footer-lower">
       <div><h3>Barangay Pag-Asa Health Center</h3><p>Community health services, appointments, queue management, and important clinic updates in one secure system.</p><p>For life-threatening emergencies, call 911 immediately.</p></div>
