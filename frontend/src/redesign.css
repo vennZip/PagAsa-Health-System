@@ -226,6 +226,8 @@ tbody tr:hover td { background: #f5fafb; }
 .star-button { border: 0; }
 
 /* Authentication surfaces retain a distinct but related identity. */
+.auth-page-shell, .auth-form-side { background: var(--pg-sky-50) !important; }
+.auth-form-side { position: relative; }
 .auth-brand-panel { position: relative; flex: 0 0 420px; display: grid; place-items: center; min-height: 100vh; padding: 3rem 2.5rem; overflow: hidden; background: var(--pg-navy-950) !important; color: #fff; }
 .auth-brand-video, .auth-brand-overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
 .auth-brand-video { object-fit: cover; }
@@ -239,6 +241,13 @@ tbody tr:hover td { background: #f5fafb; }
 .auth-card { border-color: var(--pg-border); border-radius: 10px; box-shadow: 0 18px 50px rgba(8, 47, 73, .1); }
 .auth-card h1, .auth-card h2 { color: var(--pg-navy-950); }
 .auth-card a, .auth-link-button { color: var(--pg-teal-700); }
+.auth-theme-control { position: absolute; top: 1rem; right: 1rem; z-index: 4; }
+.theme-selector { display: inline-flex; gap: .35rem; padding: .3rem; background: #edf5f6; border: 1px solid var(--pg-border); border-radius: 8px; }
+.theme-selector__option { width: auto; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: .45rem; margin: 0; padding: .55rem .8rem; color: var(--pg-muted); background: transparent; border: 0; border-radius: 6px; }
+.theme-selector__option svg { fill: currentColor; }
+.theme-selector__option:hover:not(:disabled) { color: var(--pg-navy-950); background: rgba(255, 255, 255, .7); transform: none; }
+.theme-selector__option.is-active { color: #fff; background: var(--pg-teal-700); }
+.theme-selector--compact .theme-selector__option { width: 38px; min-height: 36px; padding: .45rem; }
 
 /* Dark theme */
 [data-theme="dark"] body, [data-theme="dark"] .app-shell, [data-theme="dark"] .app-main { color: #e7f2f4; background: #071c28; }
@@ -315,12 +324,24 @@ tbody tr:hover td { background: #f5fafb; }
     padding: 0;
   }
   .auth-brand-overlay { background: rgba(4, 31, 50, .62); }
-  .auth-brand-content { display: none; }
+  .auth-brand-content {
+    position: absolute;
+    top: max(1rem, env(safe-area-inset-top));
+    left: 50%;
+    display: block;
+    width: min(13rem, 58vw);
+    transform: translateX(-50%);
+  }
+  .auth-brand-mark { width: 3.25rem; height: 3.25rem; margin-bottom: .35rem; }
+  .auth-brand-content h1 { margin: 0; font-size: 1.05rem; line-height: 1.15; }
+  .auth-brand-content p, .auth-brand-content span { display: none; }
   .auth-form-side {
     position: relative;
     z-index: 1;
     min-height: 100svh;
-    padding: max(2rem, env(safe-area-inset-top)) 1rem max(2.5rem, env(safe-area-inset-bottom)) !important;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding: max(9rem, calc(env(safe-area-inset-top) + 8rem)) 1rem max(2.5rem, env(safe-area-inset-bottom)) !important;
     background: transparent !important;
   }
   .auth-form-card {
@@ -329,6 +350,8 @@ tbody tr:hover td { background: #f5fafb; }
     box-shadow: 0 24px 70px rgba(0, 0, 0, .3) !important;
     backdrop-filter: blur(10px);
   }
+  .auth-theme-control { top: max(.75rem, env(safe-area-inset-top)); right: .75rem; }
+  .auth-theme-control .theme-selector { background: rgba(255, 255, 255, .9); border-color: rgba(255, 255, 255, .55); backdrop-filter: blur(8px); }
   .sidebar { box-shadow: 20px 0 50px rgba(8, 47, 73, .22); }
   .app-main { width: 100%; margin-left: 0; }
   .contact-band { justify-content: center; padding-inline: 16px; }
@@ -387,6 +410,10 @@ tbody tr:hover td { background: #f5fafb; }
 }
 [data-theme="dark"] .auth-form-card .auth-link-button { color: #78d2d8; background: transparent; border: 0; }
 [data-theme="dark"] .auth-form-card a { color: #78d2d8; }
+[data-theme="dark"] .theme-selector { background: #102f3d; border-color: #355766; }
+[data-theme="dark"] .theme-selector__option { color: #a6c1cb; }
+[data-theme="dark"] .theme-selector__option:hover:not(:disabled) { color: #fff; background: #173f50; }
+[data-theme="dark"] .theme-selector__option.is-active { color: #fff; background: var(--pg-teal-700); }
 
 /* Route scroll restoration and return-to-top control */
 .scroll-sentinel { position: absolute; top: 420px; left: 0; width: 1px; height: 1px; pointer-events: none; }

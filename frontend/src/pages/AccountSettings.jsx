@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
-import { useTheme } from "../context/useTheme";
 import {
   isNotificationSoundEnabled,
   playNotificationChime,
   setNotificationSoundEnabled
 } from "../utils/notificationSound";
 import MyProfile from "./MyProfile";
+import ThemeSelector from "../components/ThemeSelector";
 
 function AccountSettings() {
-  const { theme, setTheme } = useTheme();
   const [soundEnabled, setSoundEnabled] = useState(isNotificationSoundEnabled);
   const {
     currentUser,
@@ -148,22 +147,7 @@ function AccountSettings() {
       <section>
         <h2>Appearance</h2>
         <p>Choose how the health center system appears on this device.</p>
-        <div className="theme-options" role="group" aria-label="Color theme">
-          <button
-            type="button"
-            className={theme === "light" ? "theme-option theme-option--active" : "theme-option"}
-            onClick={() => setTheme("light")}
-          >
-            Light Mode
-          </button>
-          <button
-            type="button"
-            className={theme === "dark" ? "theme-option theme-option--active" : "theme-option"}
-            onClick={() => setTheme("dark")}
-          >
-            Dark Mode
-          </button>
-        </div>
+        <ThemeSelector />
         <h3>Notification Sound</h3>
         <p>Play a short chime when a new live notification appears.</p>
         <div className="theme-options" role="group" aria-label="Notification sound">

@@ -3,6 +3,7 @@ import { useAuth } from "../context/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import { Icon } from "../components/Icons";
 import AuthBrandPanel from "../components/AuthBrandPanel";
+import ThemeSelector from "../components/ThemeSelector";
 
 const takeLogoutNotice = () => {
   const notice = sessionStorage.getItem("pagasa_logout_notice") || "";
@@ -177,6 +178,7 @@ function Login() {
 
       {/* Form side */}
       <div style={S.formSide} className="auth-form-side">
+        <div className="auth-theme-control"><ThemeSelector compact /></div>
         <div style={S.card} className="auth-form-card">
           <h2 style={S.cardTitle}>Welcome back</h2>
           <p style={S.cardSub}>Sign in to access your health center account.</p>

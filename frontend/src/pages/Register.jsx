@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { Icon } from "../components/Icons";
 import AuthBrandPanel from "../components/AuthBrandPanel";
+import ThemeSelector from "../components/ThemeSelector";
 
 const S = {
   page: {
@@ -179,6 +180,7 @@ function Register() {
 
       {/* Form side */}
       <div style={S.formSide} className="auth-form-side">
+        <div className="auth-theme-control"><ThemeSelector compact /></div>
         <div style={S.card} className="auth-form-card">
           <h2 style={S.cardTitle}>Create an account</h2>
           <p style={S.cardSub}>Join the health center patient portal today.</p>
