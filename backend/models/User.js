@@ -33,6 +33,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "inactive"],
       default: "active"
+    },
+
+    privacyConsent: {
+      accepted: {
+        type: Boolean,
+        default: false
+      },
+      acceptedAt: Date,
+      version: String
     }
   },
   {

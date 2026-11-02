@@ -1,5 +1,5 @@
 ﻿import { apiUrl } from "../config/api";
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useEffect, useRef, useState } from "react";
 
 import {
   createUserWithEmailAndPassword,
@@ -23,11 +23,37 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [hasPatientProfile, setHasPatientProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const registrationInProgress = useRef(false);
 
   // Retrieve the user's MongoDB profile
-  const fetchUserProfile = async (firebaseUser) => {
+  const fetchPatientProfileStatus = useCallback(async (firebaseUser, profile) => {
+    if (profile?.role !== "patient") {
+      setHasPatientProfile(true);
+      return true;
+    }
+
+    const token = await firebaseUser.getIdToken();
+    const response = await fetch(apiUrl("/api/patients/me"), {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (response.status === 404) {
+      setHasPatientProfile(false);
+      return false;
+    }
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || "Failed to check your patient profile.");
+    }
+
+    setHasPatientProfile(true);
+    return true;
+  }, []);
+
+  const fetchUserProfile = useCallback(async (firebaseUser) => {
     const token = await firebaseUser.getIdToken();
 
     const response = await fetch(
@@ -48,12 +74,13 @@ export const AuthProvider = ({ children }) => {
     }
 
     setUserProfile(data.data);
+    await fetchPatientProfileStatus(firebaseUser, data.data);
 
     return data.data;
-  };
+  }, [fetchPatientProfileStatus]);
 
   // Register a new patient account
-  const register = async (fullName, email, password) => {
+  const register = async (fullName, email, password, privacyConsent) => {
     registrationInProgress.current = true;
 
     try {
@@ -79,7 +106,7 @@ export const AuthProvider = ({ children }) => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`
           },
-          body: JSON.stringify({ fullName })
+          body: JSON.stringify({ fullName, privacyConsent })
         }
       );
 
@@ -99,6 +126,7 @@ export const AuthProvider = ({ children }) => {
       await signOut(auth);
       setCurrentUser(null);
       setUserProfile(null);
+      setHasPatientProfile(null);
       throw error;
     } finally {
       registrationInProgress.current = false;
@@ -160,6 +188,7 @@ export const AuthProvider = ({ children }) => {
     await signOut(auth);
     setCurrentUser(null);
     setUserProfile(null);
+    setHasPatientProfile(null);
   };
 
   const resetPassword = async (email) => {
@@ -213,6 +242,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         setUserProfile(null);
+        setHasPatientProfile(null);
 
         if (!user) {
           setCurrentUser(null);
@@ -233,6 +263,7 @@ export const AuthProvider = ({ children }) => {
           // Reject accounts without a valid backend profile
           setCurrentUser(null);
           setUserProfile(null);
+          setHasPatientProfile(null);
 
           await signOut(auth);
 
@@ -243,17 +274,19 @@ export const AuthProvider = ({ children }) => {
     );
 
     return unsubscribe;
-  }, []);
+  }, [fetchUserProfile]);
 
   const value = {
     currentUser,
     userProfile,
+    hasPatientProfile,
     role: userProfile?.role || null,
     register,
     login,
     resetPassword,
     changeEmail,
     changePassword,
+    refreshPatientProfileStatus: () => fetchPatientProfileStatus(auth.currentUser, userProfile),
     logout
   };
 

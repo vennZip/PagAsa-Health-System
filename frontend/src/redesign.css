@@ -188,6 +188,15 @@ tbody tr:hover td { background: #f5fafb; }
 /* Dialogs and notifications */
 .modal-backdrop { background: rgba(8, 47, 73, .68); backdrop-filter: blur(3px); }
 .decision-panel { border-radius: 10px; box-shadow: 0 24px 70px rgba(8, 47, 73, .25); }
+.privacy-consent-panel { width: min(620px, 100%); }
+.privacy-consent-kicker { display: block; margin-bottom: .5rem; color: var(--pg-teal-700); font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.privacy-consent-panel h2 { margin-bottom: .75rem; }
+.privacy-consent-summary { margin: 1.25rem 0; padding: 1rem 1.25rem; background: var(--pg-sky-50); border-left: 4px solid var(--pg-teal-600); }
+.privacy-consent-summary h3 { margin: 0 0 .5rem; font-size: 1rem; }
+.privacy-consent-summary ul { margin: 0; padding-left: 1.25rem; }
+.privacy-consent-summary li + li { margin-top: .35rem; }
+.privacy-consent-note { color: var(--pg-muted); font-size: .875rem; }
+[data-theme="dark"] .privacy-consent-summary { background: #0e3d4d; }
 .notification-panel { color: var(--pg-ink); border: 1px solid var(--pg-border); border-radius: 8px; box-shadow: 0 18px 50px rgba(8, 47, 73, .18); }
 .notification-panel-header { border-color: var(--pg-border); }
 .notification-item--unread { border-left-color: var(--pg-teal-700); background: #edf8f8; }

@@ -99,6 +99,7 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
   const fullNameInputRef = useRef(null);
   const passwordInputRef = useRef(null);
 
@@ -109,7 +110,7 @@ function Register() {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -125,14 +126,19 @@ function Register() {
       return;
     }
 
+    setShowConsent(true);
+  };
+
+  const handleConsent = async () => {
     try {
       setLoading(true);
       await register(
         formData.fullName,
         formData.email,
-        formData.password
+        formData.password,
+        true
       );
-      navigate("/dashboard", { replace: true });
+      navigate("/profile", { replace: true });
     } catch (err) {
       const errorCode = err.code || "";
       const errorMessage = err.message?.toLowerCase() || "";
@@ -152,6 +158,7 @@ function Register() {
       } else {
         setError("Unable to create your account. Please try again.");
       }
+      setShowConsent(false);
       setFormData({
         fullName: "",
         email: "",
@@ -259,6 +266,46 @@ function Register() {
           </div>
         </div>
       </div>
+
+      {showConsent && (
+        <div className="modal-backdrop" role="presentation">
+          <section
+            className="decision-panel privacy-consent-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="privacy-consent-title"
+            aria-describedby="privacy-consent-description"
+          >
+            <span className="privacy-consent-kicker">Before you continue</span>
+            <h2 id="privacy-consent-title">Your privacy matters</h2>
+            <p id="privacy-consent-description">
+              Do you agree to share your personal and health-related information with
+              Barangay Pag-Asa Health Center so we can create your patient profile,
+              manage appointments, provide queue updates, and maintain your health records?
+            </p>
+            <div className="privacy-consent-summary">
+              <h3>Information we will request</h3>
+              <ul>
+                <li>Birth date, sex, address, and contact number</li>
+                <li>Emergency contact information</li>
+                <li>Appointment, queue, and health-service records</li>
+              </ul>
+            </div>
+            <p className="privacy-consent-note">
+              Your information is used only for health-center services and authorized
+              clinic operations. You can cancel now if you do not agree.
+            </p>
+            <div className="modal-actions">
+              <button type="button" onClick={() => setShowConsent(false)} disabled={loading}>
+                Cancel
+              </button>
+              <button type="button" onClick={handleConsent} disabled={loading} autoFocus>
+                {loading ? "Creating Account..." : "I Agree & Create Account"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       <style>{`
         @media (max-width: 820px) {

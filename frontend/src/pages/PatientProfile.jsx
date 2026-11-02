@@ -8,7 +8,7 @@ import {
 } from "../utils/phone";
 
 function PatientProfile() {
-  const { currentUser } = useAuth();
+  const { currentUser, refreshPatientProfileStatus } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     birthDate: "",
@@ -80,6 +80,8 @@ function PatientProfile() {
     setSuccess(
       `Profile saved successfully! Your Patient Number is ${data.data.patientNumber}.`
     );
+    await refreshPatientProfileStatus();
+    navigate("/dashboard", { replace: true });
 
   } catch (err) {
     console.error("Patient profile error:", err);
@@ -91,8 +93,13 @@ function PatientProfile() {
 
   return (
     <div>
-      <h1>Patient Profile</h1>
-      <p>Please complete your personal and contact information.</p>
+      <div className="page-header">
+        <div>
+          <span className="page-eyebrow">One final step</span>
+          <h1>Create Your Patient Profile</h1>
+          <p>Please complete your personal and contact information before using the patient portal.</p>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit}>
         {error && <p style={{ color: "red" }}>{error}</p>}
@@ -191,12 +198,6 @@ function PatientProfile() {
           </button>
       </form>
 
-      <button
-        type="button"
-        onClick={() => navigate("/dashboard")}
-      >
-        Back to Dashboard
-      </button>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import User from "../models/User.js";
 export const registerUser = async (req, res) => {
   try {
     const { uid, email } = req.firebaseUser;
-    const { fullName } = req.body;
+    const { fullName, privacyConsent } = req.body;
 
     if (!fullName || !email) {
       return res.status(400).json({
@@ -33,11 +33,23 @@ export const registerUser = async (req, res) => {
       });
     }
 
+    if (privacyConsent !== true) {
+      return res.status(400).json({
+        success: false,
+        message: "You must agree to the privacy notice before creating an account."
+      });
+    }
+
     const user = await User.create({
       firebaseUid: uid,
       fullName,
       email,
-      role: "patient"
+      role: "patient",
+      privacyConsent: {
+        accepted: true,
+        acceptedAt: new Date(),
+        version: "2026-11-02"
+      }
     });
 
     res.status(201).json({

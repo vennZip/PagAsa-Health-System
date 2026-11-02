@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -48,7 +48,17 @@ function ProtectedRoute({ children, allowedRoles }) {
 }
 
 function AppContent() {
-  const { currentUser, role } = useAuth();
+  const { currentUser, role, hasPatientProfile } = useAuth();
+  const location = useLocation();
+
+  if (
+    currentUser &&
+    role === "patient" &&
+    hasPatientProfile === false &&
+    location.pathname !== "/profile"
+  ) {
+    return <Navigate to="/profile" replace />;
+  }
 
   return (
     <Routes>
