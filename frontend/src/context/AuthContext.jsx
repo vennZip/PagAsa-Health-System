@@ -79,6 +79,18 @@ export const AuthProvider = ({ children }) => {
     return data.data;
   }, [fetchPatientProfileStatus]);
 
+  const activateSession = async (firebaseUser) => {
+    const token = await firebaseUser.getIdToken();
+    const response = await fetch(apiUrl("/api/users/session"), {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to activate your session.");
+    }
+  };
+
   // Register a new patient account
   const register = async (fullName, email, password, privacyConsent) => {
     registrationInProgress.current = true;
@@ -167,6 +179,8 @@ export const AuthProvider = ({ children }) => {
           data.message || "Profile synchronization failed."
         );
       }
+
+      await activateSession(firebaseUser);
 
       // Retrieve the actual MongoDB role and account status
       await fetchUserProfile(firebaseUser);
@@ -275,6 +289,32 @@ export const AuthProvider = ({ children }) => {
 
     return unsubscribe;
   }, [fetchUserProfile]);
+
+  useEffect(() => {
+    if (!currentUser) return undefined;
+
+    const verifySession = async () => {
+      try {
+        const token = await currentUser.getIdToken();
+        const response = await fetch(apiUrl("/api/users/me"), {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.status === 401) {
+          sessionStorage.setItem(
+            "pagasa_logout_notice",
+            "This account was signed in somewhere else, so this session was logged out."
+          );
+          await logout();
+        }
+      } catch (error) {
+        console.error("Session verification failed:", error);
+      }
+    };
+
+    const interval = window.setInterval(verifySession, 15000);
+    return () => window.clearInterval(interval);
+  }, [currentUser]);
 
   const value = {
     currentUser,

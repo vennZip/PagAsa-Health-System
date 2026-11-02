@@ -2,6 +2,7 @@ import express from "express";
 
 import {
   registerUser,
+  activateSession,
   getCurrentUser,
   updateMyEmail,
   getAllUsers,
@@ -20,6 +21,12 @@ router.post(
   "/register",
   verifyFirebaseToken,
   registerUser
+);
+
+router.post(
+  "/session",
+  verifyFirebaseToken,
+  activateSession
 );
 
 // Retrieve the currently logged-in user's profile and role

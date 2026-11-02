@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { Icon } from "../components/Icons";
+import AuthBrandPanel from "../components/AuthBrandPanel";
 
 const S = {
   page: {
@@ -174,12 +175,7 @@ function Register() {
   return (
     <div style={S.page} className="auth-page-shell">
       {/* Branding panel */}
-      <div style={S.panel} className="auth-brand-panel">
-        <div style={S.cross}>P+</div>
-        <h1 style={S.panelTitle}>Barangay Pag-Asa<br />Health Center</h1>
-        <p style={S.panelSub}>"Caring for you, beyond cure."</p>
-        <span style={S.panelBadge}>Community Health &amp; Wellness</span>
-      </div>
+      <AuthBrandPanel />
 
       {/* Form side */}
       <div style={S.formSide} className="auth-form-side">

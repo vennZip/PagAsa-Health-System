@@ -3,7 +3,7 @@ import User from "../models/User.js";
 // Register a user profile in MongoDB
 export const registerUser = async (req, res) => {
   try {
-    const { uid, email } = req.firebaseUser;
+    const { uid, email, authTime } = req.firebaseUser;
     const { fullName, privacyConsent } = req.body;
 
     if (!fullName || !email) {
@@ -49,7 +49,8 @@ export const registerUser = async (req, res) => {
         accepted: true,
         acceptedAt: new Date(),
         version: "2026-11-02"
-      }
+      },
+      activeAuthTime: authTime
     });
 
     res.status(201).json({
@@ -64,6 +65,42 @@ export const registerUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to register user profile."
+    });
+  }
+};
+
+// Make the newest Firebase sign-in the account's only active session.
+export const activateSession = async (req, res) => {
+  try {
+    const { uid, authTime } = req.firebaseUser;
+    const user = await User.findOne({ firebaseUid: uid });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User profile not found."
+      });
+    }
+
+    if (user.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        message: "Your account is inactive. Access denied."
+      });
+    }
+
+    user.activeAuthTime = authTime;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Session activated successfully."
+    });
+  } catch (error) {
+    console.error("Activate session error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to activate the session."
     });
   }
 };

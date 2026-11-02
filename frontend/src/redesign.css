@@ -228,7 +228,16 @@ tbody tr:hover td { background: #f5fafb; }
 .star-button { border: 0; }
 
 /* Authentication surfaces retain a distinct but related identity. */
-.auth-brand-panel { background: var(--pg-navy-950) !important; }
+.auth-brand-panel { position: relative; flex: 0 0 420px; display: grid; place-items: center; min-height: 100vh; padding: 3rem 2.5rem; overflow: hidden; background: var(--pg-navy-950) !important; color: #fff; }
+.auth-brand-video, .auth-brand-overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+.auth-brand-video { object-fit: cover; }
+.auth-brand-overlay { background: linear-gradient(180deg, rgba(4, 31, 50, .55), rgba(4, 31, 50, .9)); }
+.auth-brand-content { position: relative; z-index: 1; text-align: center; }
+.auth-brand-mark { margin-bottom: 1.25rem; color: #fff; font-size: 4.5rem; font-weight: 800; line-height: 1; }
+.auth-brand-content h1 { margin: 0 0 .75rem; color: #fff; font-size: 1.625rem; }
+.auth-brand-content p { margin: 0; color: rgba(255, 255, 255, .86); font-style: italic; }
+.auth-brand-content span { display: inline-block; margin-top: 2rem; padding: .5rem 1.25rem; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25); border-radius: 6px; color: #fff; font-size: .75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+@media (prefers-reduced-motion: reduce) { .auth-brand-video { display: none; } }
 .auth-card { border-color: var(--pg-border); border-radius: 10px; box-shadow: 0 18px 50px rgba(8, 47, 73, .1); }
 .auth-card h1, .auth-card h2 { color: var(--pg-navy-950); }
 .auth-card a, .auth-link-button { color: var(--pg-teal-700); }

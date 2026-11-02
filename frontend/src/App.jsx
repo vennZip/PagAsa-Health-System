@@ -22,6 +22,7 @@ import ReportsAnalytics from "./pages/ReportsAnalytics";
 import ClinicCalendar from "./pages/ClinicCalendar";
 import AppLayout from "./components/AppLayout";
 import ScrollManager from "./components/ScrollManager";
+import IdleSessionManager from "./components/IdleSessionManager";
 
 import { useAuth } from "./context/useAuth";
 
@@ -236,6 +237,7 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollManager />
+      <IdleSessionManager />
       <AppContent />
     </BrowserRouter>
   );

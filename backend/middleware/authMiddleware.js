@@ -34,6 +34,17 @@ const protect = async (req, res, next) => {
       });
     }
 
+    if (
+      user.activeAuthTime &&
+      decodedToken.auth_time !== user.activeAuthTime
+    ) {
+      return res.status(401).json({
+        success: false,
+        code: "SESSION_REPLACED",
+        message: "This account was signed in on another device."
+      });
+    }
+
     // Firebase applies email changes only after the user opens its
     // verification link. Keep the local profile synchronized afterward.
     const firebaseEmail = decodedToken.email?.trim().toLowerCase();

@@ -2,6 +2,13 @@ import { useRef, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import { Icon } from "../components/Icons";
+import AuthBrandPanel from "../components/AuthBrandPanel";
+
+const takeLogoutNotice = () => {
+  const notice = sessionStorage.getItem("pagasa_logout_notice") || "";
+  sessionStorage.removeItem("pagasa_logout_notice");
+  return notice;
+};
 
 const S = {
   page: {
@@ -91,7 +98,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(takeLogoutNotice);
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const emailInputRef = useRef(null);
@@ -161,12 +168,7 @@ function Login() {
   return (
     <div style={S.page} className="auth-page-shell">
       {/* Branding panel */}
-      <div style={S.panel} className="auth-brand-panel">
-        <div style={S.cross}>P+</div>
-        <h1 style={S.panelTitle}>Barangay Pag-Asa<br />Health Center</h1>
-        <p style={S.panelSub}>"Caring for you, beyond cure."</p>
-        <span style={S.panelBadge}>Community Health &amp; Wellness</span>
-      </div>
+      <AuthBrandPanel />
 
       {/* Form side */}
       <div style={S.formSide} className="auth-form-side">

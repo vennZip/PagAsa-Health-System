@@ -19,7 +19,8 @@ const verifyFirebaseToken = async (req, res, next) => {
     // Attach verified Firebase information
     req.firebaseUser = {
       uid: decodedToken.uid,
-      email: decodedToken.email
+      email: decodedToken.email,
+      authTime: decodedToken.auth_time
     };
 
     next();

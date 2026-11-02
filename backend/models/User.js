@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema(
       },
       acceptedAt: Date,
       version: String
+    },
+
+    activeAuthTime: {
+      type: Number,
+      default: null
     }
   },
   {
