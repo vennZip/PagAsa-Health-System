@@ -15,7 +15,7 @@ const S = {
   page: {
     minHeight: "100vh",
     display: "flex",
-    background: "#f3f8fa",
+    background: "#faf7f7",
   },
   panel: {
     flex: "0 0 420px",
@@ -24,7 +24,7 @@ const S = {
     alignItems: "center",
     justifyContent: "center",
     padding: "48px 40px",
-    background: "#082f49",
+    background: "#3a1a20",
     color: "#fff",
     gap: "24px",
   },
@@ -73,21 +73,21 @@ const S = {
     width: "min(420px, 100%)",
     background: "#fff",
     borderRadius: "10px",
-    boxShadow: "0 18px 50px rgba(8,47,73,0.10)",
+    boxShadow: "0 18px 50px rgba(38,20,23,0.14)",
     padding: "40px 36px 32px",
-    border: "1px solid #cfdee4",
+    border: "1px solid #ddcfd2",
   },
   cardTitle: {
     margin: "0 0 4px",
     fontSize: "22px",
     fontWeight: 800,
-    color: "#082f49",
+    color: "#3a1a20",
     letterSpacing: "-0.4px",
   },
   cardSub: {
     margin: "0 0 28px",
     fontSize: "14px",
-    color: "#526b78",
+    color: "#66585b",
   },
 };
 
