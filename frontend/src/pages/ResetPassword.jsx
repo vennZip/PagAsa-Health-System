@@ -1,10 +1,37 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
+import { applyActionCode, checkActionCode, confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { auth } from "../firebase";
 import AuthBrandPanel from "../components/AuthBrandPanel";
 import ThemeSelector from "../components/ThemeSelector";
 import { Icon } from "../components/Icons";
+
+const emailActions = {
+  verifyEmail: {
+    kicker: "Email verification",
+    title: "Verify your email address",
+    description: "Confirm this email address for your Barangay Pag-Asa Health Center account.",
+    button: "Verify email",
+    successTitle: "Email address verified",
+    successDescription: "Your email address has been verified successfully."
+  },
+  verifyAndChangeEmail: {
+    kicker: "Email change",
+    title: "Confirm your new email address",
+    description: "Approve this email address as the new sign-in email for your account.",
+    button: "Confirm email change",
+    successTitle: "Email address changed",
+    successDescription: "Your new email address has been verified and applied."
+  },
+  recoverEmail: {
+    kicker: "Account recovery",
+    title: "Restore your previous email",
+    description: "Reverse the recent email change and restore the previous address on your account.",
+    button: "Restore email",
+    successTitle: "Email address restored",
+    successDescription: "Your previous email address has been restored successfully."
+  }
+};
 
 function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -16,21 +43,31 @@ function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const emailAction = emailActions[mode];
 
   useEffect(() => {
     let active = true;
 
     const validateLink = async () => {
-      if (mode !== "resetPassword" || !actionCode) {
+      if (!actionCode || (mode !== "resetPassword" && !emailAction)) {
         if (active) setStatus("invalid");
         return;
       }
 
       try {
-        const accountEmail = await verifyPasswordResetCode(auth, actionCode);
+        if (mode === "resetPassword") {
+          const accountEmail = await verifyPasswordResetCode(auth, actionCode);
+          if (active) {
+            setEmail(accountEmail);
+            setStatus("ready");
+          }
+          return;
+        }
+
+        const actionInfo = await checkActionCode(auth, actionCode);
         if (active) {
-          setEmail(accountEmail);
-          setStatus("ready");
+          setEmail(actionInfo.data.email || actionInfo.data.previousEmail || "your account");
+          setStatus("actionReady");
         }
       } catch {
         if (active) setStatus("invalid");
@@ -39,7 +76,7 @@ function ResetPassword() {
 
     validateLink();
     return () => { active = false; };
-  }, [actionCode, mode]);
+  }, [actionCode, emailAction, mode]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -74,6 +111,22 @@ function ResetPassword() {
     }
   };
 
+  const handleEmailAction = async () => {
+    setError("");
+    try {
+      setStatus("actionSubmitting");
+      await applyActionCode(auth, actionCode);
+      setStatus("actionSuccess");
+    } catch (actionError) {
+      if (["auth/expired-action-code", "auth/invalid-action-code"].includes(actionError.code)) {
+        setStatus("invalid");
+        return;
+      }
+      setError("We could not complete this email request. Please try again.");
+      setStatus("actionReady");
+    }
+  };
+
   return (
     <main className="auth-page-shell reset-password-page">
       <AuthBrandPanel />
@@ -91,9 +144,31 @@ function ResetPassword() {
           {status === "invalid" && (
             <div>
               <span className="reset-password-kicker">Link unavailable</span>
-              <h1>Request a new reset link</h1>
-              <p>This link has expired, has already been used, or is incomplete. Return to login and request a new password reset email.</p>
+              <h1>Request a new email link</h1>
+              <p>This link has expired, has already been used, or is incomplete. Return to the website and request a new email.</p>
               <Link className="reset-password-action" to="/login">Return to login</Link>
+            </div>
+          )}
+
+          {(status === "actionReady" || status === "actionSubmitting") && emailAction && (
+            <div>
+              <span className="reset-password-kicker">{emailAction.kicker}</span>
+              <h1>{emailAction.title}</h1>
+              <p>{emailAction.description}</p>
+              {email !== "your account" && <p className="reset-password-email"><strong>{email}</strong></p>}
+              {error && <p className="alert alert--error">{error}</p>}
+              <button className="reset-password-action" type="button" onClick={handleEmailAction} disabled={status === "actionSubmitting"}>
+                {status === "actionSubmitting" ? "Please wait..." : emailAction.button}
+              </button>
+            </div>
+          )}
+
+          {status === "actionSuccess" && emailAction && (
+            <div>
+              <span className="reset-password-kicker">Completed</span>
+              <h1>{emailAction.successTitle}</h1>
+              <p>{emailAction.successDescription}</p>
+              <Link className="reset-password-action" to="/login">Continue to login</Link>
             </div>
           )}
 

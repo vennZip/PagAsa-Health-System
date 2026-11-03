@@ -900,9 +900,12 @@ tbody tr:hover td { background: #fcf6f7; }
 .reset-password-form button[type="submit"] { width: 100%; margin: .25rem 0 0; }
 .reset-password-action { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; margin-top: 1rem; padding: .7rem 1rem; color: #fff; background: var(--pg-teal-700); border-radius: 6px; font-size: .85rem; font-weight: 800; text-decoration: none; }
 .reset-password-action:hover { color: #fff; background: #8f1d29; }
+.reset-password-action:disabled { opacity: .7; cursor: wait; }
+.reset-password-email { padding: .75rem; overflow-wrap: anywhere; background: #faf5f6; border: 1px solid var(--pg-border-soft); border-radius: 6px; }
 [data-theme="dark"] .reset-password-card h1 { color: #f7f7f8; }
 [data-theme="dark"] .reset-password-card > div > p,
 [data-theme="dark"] .reset-password-card > p { color: #b8b8bf; }
+[data-theme="dark"] .reset-password-email { background: #29292d; border-color: #45454b; }
 
 @media (max-width: 620px) {
   .reset-password-page .auth-form-side { padding-inline: 1rem !important; }
