@@ -64,43 +64,45 @@ function AppLayout({ children }) {
   };
 
   return (
-    <div className="app-shell">
-      <aside className={`sidebar ${isOpen ? "sidebar--open" : ""}`}>
-        <div className="brand">
-          <HealthCrossLogo className="brand-mark" />
-          <div><strong>Barangay Pag-Asa</strong><span>Health Center</span></div>
-          <button className="sidebar-close" onClick={() => setIsOpen(false)} aria-label="Close navigation"><Icon name="close" /></button>
-        </div>
-        <div className="user-card">
-          <div className="avatar">{initials}</div>
-          <div><strong>{userProfile?.fullName || "Health Center User"}</strong><span>{role || "user"}</span></div>
-        </div>
-        <nav className="side-nav">
-          {navigation
-            .filter((item) => item[3].includes(role))
-            .map(([label, to, icon]) => (
-              <NavLink key={to} to={to} onClick={() => setIsOpen(false)}>
-                <Icon name={icon} />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-        </nav>
-        <button className="logout-button" onClick={handleLogout}><Icon name="logout" /> Logout</button>
-      </aside>
-
-      {isOpen && <button className="nav-scrim" onClick={() => setIsOpen(false)} aria-label="Close navigation" />}
-
+    <div className="app-shell app-shell--top-nav">
       <main className="app-main">
-        <ContactBand />
-        <header className="topbar">
-          <button className="menu-button" onClick={() => setIsOpen(true)} aria-label="Open navigation"><Icon name="menu" /></button>
-          <div><span className="topbar-kicker">Barangay Pag-Asa Health Center</span></div>
-          <div className="topbar-user">
-            <LiveClock />
-            <NotificationToasts />
-            <div className="avatar avatar--small">{initials}</div>
-          </div>
-        </header>
+        <div className="site-header">
+          <ContactBand />
+          <header className="topbar hospital-topbar">
+            <div className="header-brand">
+              <HealthCrossLogo className="header-brand-mark" />
+              <div><strong>Barangay Pag-Asa</strong><span>Health Center</span></div>
+            </div>
+            <div className="topbar-user">
+              <LiveClock />
+              <NotificationToasts />
+              <button className="header-profile" type="button" onClick={() => navigate("/account-settings")} aria-label="Open profile and settings">
+                <span className="avatar avatar--small">{initials}</span>
+                <span className="header-user-copy"><strong>{userProfile?.fullName || "Health Center User"}</strong><small>{role || "user"}</small></span>
+              </button>
+              <button className="header-logout" type="button" onClick={handleLogout}><Icon name="logout" /><span>Logout</span></button>
+              <button className="menu-button" type="button" onClick={() => setIsOpen((open) => !open)} aria-label={isOpen ? "Close navigation" : "Open navigation"} aria-expanded={isOpen} aria-controls="primary-navigation"><Icon name={isOpen ? "close" : "menu"} /></button>
+            </div>
+          </header>
+          <nav id="primary-navigation" className={`top-navigation ${isOpen ? "top-navigation--open" : ""}`} aria-label="Primary navigation">
+            <div className="top-navigation__inner">
+              {navigation
+                .filter((item) => item[3].includes(role))
+                .map(([label, to, icon]) => (
+                  <NavLink key={to} to={to} onClick={() => setIsOpen(false)}>
+                    <Icon name={icon} />
+                    <span>{label}</span>
+                  </NavLink>
+                ))}
+              <button className="mobile-nav-logout" type="button" onClick={handleLogout}>
+                <Icon name="logout" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </nav>
+        </div>
+
+        {isOpen && <button className="nav-scrim top-nav-scrim" onClick={() => setIsOpen(false)} aria-label="Close navigation" />}
         <div className="content-area">{children}</div>
         <GlobalFooter />
       </main>
