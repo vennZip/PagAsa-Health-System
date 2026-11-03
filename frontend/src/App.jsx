@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Welcome from "./pages/Welcome";
+import ResetPassword from "./pages/ResetPassword";
 import PatientDashboard from "./pages/PatientDashboard";
 import PatientProfile from "./pages/PatientProfile";
 import EditProfile from "./pages/EditProfile";
@@ -57,7 +58,7 @@ function AppContent() {
     currentUser &&
     role === "patient" &&
     hasPatientProfile === false &&
-    location.pathname !== "/profile"
+    !["/profile", "/reset-password"].includes(location.pathname)
   ) {
     return <Navigate to="/profile" replace />;
   }
@@ -93,6 +94,8 @@ function AppContent() {
             : <Login />
         }
       />
+
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Dashboard */}
 <Route
