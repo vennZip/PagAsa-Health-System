@@ -600,6 +600,12 @@ tbody tr:hover td { background: #f5fafb; }
   box-shadow: 0 24px 70px rgba(0, 0, 0, .3) !important;
   backdrop-filter: blur(12px);
 }
+.auth-form-card .auth-card,
+.auth-form-card .auth-card form {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
 [data-theme="dark"] .auth-page-shell,
 [data-theme="dark"] .auth-form-side { background: transparent !important; }
 [data-theme="dark"] .auth-form-card {
