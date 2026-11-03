@@ -62,8 +62,8 @@ function Welcome() {
 
         <aside className="welcome-goals" aria-labelledby="goals-title">
           <div className="welcome-goals__heading">
-            <span>Our purpose</span>
-            <h2 id="goals-title">What this system aims to achieve</h2>
+            <span>Care priorities</span>
+            <h2 id="goals-title">Supporting better community care</h2>
           </div>
           <div className="welcome-goals__list">
             {goals.map((goal) => (
