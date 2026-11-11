@@ -1,5 +1,8 @@
 import Patient from "../models/Patient.js";
 import User from "../models/User.js";
+import Appointment from "../models/Appointment.js";
+import HealthRecord from "../models/HealthRecord.js";
+import QueueTicket from "../models/QueueTicket.js";
 import mongoose from "mongoose";
 import { randomBytes } from "node:crypto";
 import { notifyRoles } from "../utils/notificationService.js";
@@ -242,6 +245,97 @@ export const getMyPatientProfile = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to retrieve your profile."
+    });
+  }
+};
+
+const buildPatientArchive = async (patientId) => {
+  const patient = await Patient.findById(patientId)
+    .select("-__v")
+    .populate("userId", "fullName email");
+
+  if (!patient) {
+    return null;
+  }
+
+  const [healthRecords, appointments, queueTickets] = await Promise.all([
+    HealthRecord.find({ patientId })
+      .populate("staffId", "fullName")
+      .populate("serviceId", "serviceName category")
+      .sort({ visitDate: -1, createdAt: -1 })
+      .select("-__v"),
+    Appointment.find({ patientId })
+      .populate("serviceId", "serviceName category")
+      .populate("approvedBy", "fullName")
+      .sort({ appointmentDate: -1, createdAt: -1 })
+      .select("-__v -slotKey"),
+    QueueTicket.find({ patientId })
+      .sort({ queueDate: -1, createdAt: -1 })
+      .select("-__v")
+  ]);
+
+  return {
+    patient,
+    summary: {
+      healthRecords: healthRecords.length,
+      appointments: appointments.length,
+      completedAppointments: appointments.filter(({ status }) => status === "completed").length,
+      queueVisits: queueTickets.length
+    },
+    healthRecords,
+    appointments,
+    queueTickets
+  };
+};
+
+// GET: Retrieve a complete, read-only history for one patient
+export const getPatientArchive = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid patient ID."
+      });
+    }
+
+    const archive = await buildPatientArchive(req.params.id);
+
+    if (!archive) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient profile not found."
+      });
+    }
+
+    return res.status(200).json({ success: true, data: archive });
+  } catch (error) {
+    console.error("Get patient archive error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve the patient archive."
+    });
+  }
+};
+
+// GET: Retrieve the logged-in patient's own complete history
+export const getMyPatientArchive = async (req, res) => {
+  try {
+    const patient = await Patient.findOne({ userId: req.user.id }).select("_id");
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient profile not found."
+      });
+    }
+
+    const archive = await buildPatientArchive(patient._id);
+    return res.status(200).json({ success: true, data: archive });
+  } catch (error) {
+    console.error("Get my patient archive error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve your patient archive."
     });
   }
 };

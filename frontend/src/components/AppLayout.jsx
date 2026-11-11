@@ -13,6 +13,7 @@ const navigation = [
   ["Patients", "/staff-patients", "users", ["admin", "staff"]],
   ["Appointments", "/staff-appointments", "calendar", ["admin", "staff"]],
   ["My Appointments", "/appointments", "calendar", ["patient"]],
+  ["My Records", "/my-records", "records", ["patient"]],
   ["Queue Management", "/queue-management", "queue", ["admin", "staff"]],
   ["My Queue", "/my-queue", "queue", ["patient"]],
   ["Inventory", "/inventory", "inventory", ["admin", "staff"]],

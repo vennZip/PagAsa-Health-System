@@ -22,6 +22,7 @@ import ServiceManagement from "./pages/ServiceManagement";
 import ActivityLogs from "./pages/ActivityLogs";
 import ReportsAnalytics from "./pages/ReportsAnalytics";
 import ClinicCalendar from "./pages/ClinicCalendar";
+import PatientArchive from "./pages/PatientArchive";
 import AppLayout from "./components/AppLayout";
 import ScrollManager from "./components/ScrollManager";
 import IdleSessionManager from "./components/IdleSessionManager";
@@ -192,6 +193,9 @@ function AppContent() {
     </ProtectedRoute>
   }
 />
+
+<Route path="/staff-patients/:id/archive" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><PatientArchive /></ProtectedRoute>} />
+<Route path="/my-records" element={<ProtectedRoute allowedRoles={["patient"]}><PatientArchive /></ProtectedRoute>} />
 
       {/* Staff/Admin Queue Management */}
       <Route

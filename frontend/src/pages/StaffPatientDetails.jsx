@@ -155,6 +155,9 @@ function StaffPatientDetails() {
       <button onClick={() => navigate("/staff-patients")}>
         Back to Patients
       </button>
+      <button className="button-secondary" onClick={() => navigate(`/staff-patients/${id}/archive`)}>
+        View Patient History
+      </button>
 
       <hr />
 

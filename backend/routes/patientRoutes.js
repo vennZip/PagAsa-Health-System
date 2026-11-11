@@ -6,7 +6,9 @@ import {
   createPatient,
   updatePatient,
   getMyPatientProfile,
-  updateMyPatientProfile
+  updateMyPatientProfile,
+  getPatientArchive,
+  getMyPatientArchive
 } from "../controllers/patientController.js";
 
 import protect from "../middleware/authMiddleware.js";
@@ -31,6 +33,13 @@ router.get(
   getMyPatientProfile
 );
 
+router.get(
+  "/me/archive",
+  protect,
+  authorizeRoles("patient"),
+  getMyPatientArchive
+);
+
 // Patients can update only their own profile
 router.put(
   "/me",
@@ -40,6 +49,14 @@ router.put(
 );
 
 // Admin, staff, or the profile owner can view a patient by ID
+router.get(
+  "/:id/archive",
+  protect,
+  authorizeRoles("admin", "staff", "patient"),
+  checkPatientAccess,
+  getPatientArchive
+);
+
 router.get(
   "/:id",
   protect,
