@@ -188,6 +188,24 @@ tbody tr:hover td { background: #fcf6f7; }
 .pagination button { min-width: 40px; color: var(--pg-navy-900); background: #fff; border: 1px solid var(--pg-border); }
 .pagination button:hover:not(:disabled) { color: #fff; background: var(--pg-navy-900); }
 
+/* Formal report export controls */
+.export-panel { margin: 0 0 1.5rem; border-top: 4px solid var(--pg-teal-700); }
+.export-panel__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.export-panel__heading span { display: block; margin-bottom: .3rem; color: var(--pg-teal-700); font-size: .7rem; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.export-panel__heading h2 { margin-bottom: .25rem; }
+.export-panel__heading p { margin: 0; }
+.export-panel__heading > strong { flex: 0 0 auto; padding: .45rem .65rem; color: var(--pg-navy-900); background: var(--pg-teal-100); border: 1px solid var(--pg-border-soft); border-radius: 4px; font-size: .78rem; }
+.export-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.export-filter-grid > div { min-width: 0; }
+.export-filter-grid label { display: block; margin-bottom: .35rem; }
+.export-filter-grid input, .export-filter-grid select { width: 100%; }
+[data-theme="dark"] .export-panel__heading > strong { color: #f7f7f8; background: #38282c; border-color: #513137; }
+
+@media (max-width: 620px) {
+  .export-panel__heading { flex-direction: column; }
+  .export-panel__heading > strong { align-self: flex-start; }
+}
+
 /* Patient history archive */
 .patient-archive { display: grid; gap: 1.5rem; }
 .archive-patient-summary { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; margin: 0; padding: 1.5rem; background: var(--pg-navy-950); border: 0; color: #fff; }

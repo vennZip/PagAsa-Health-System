@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { Alert, PageHeader, StatCard } from "../components/UI";
+import { exportDateStamp } from "../utils/exportExcel";
+import { exportAnalyticsDocx } from "../utils/exportWord";
 
 const APPOINTMENT_STATUSES = [
   "pending",
@@ -68,11 +70,12 @@ function StatusChart({ title, statuses, data }) {
 }
 
 function ReportsAnalytics() {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const navigate = useNavigate();
   const [report, setReport] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   const loadReport = useCallback(async () => {
     try {
@@ -102,6 +105,24 @@ function ReportsAnalytics() {
     loadReport();
   }, [loadReport]);
 
+  const exportWordReport = async () => {
+    try {
+      setExporting(true);
+      setError("");
+      await exportAnalyticsDocx({
+        report,
+        generatedBy: userProfile?.fullName || currentUser.displayName,
+        filename: `pagasa-analytics-${exportDateStamp()}.docx`,
+        appointmentStatuses: APPOINTMENT_STATUSES,
+        queueStatuses: QUEUE_STATUSES
+      });
+    } catch (exportError) {
+      setError(exportError.message || "Unable to create the Word analytics report.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -112,6 +133,9 @@ function ReportsAnalytics() {
             <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
             <button onClick={loadReport} disabled={loading}>
               {loading ? "Refreshing..." : "Refresh Report"}
+            </button>
+            <button onClick={exportWordReport} disabled={loading || exporting || !report}>
+              {exporting ? "Preparing Word Report..." : "Export Word Report"}
             </button>
           </>
         )}

@@ -1,8 +1,9 @@
 ﻿import { apiUrl } from "../config/api";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { exportDateStamp, exportToExcel } from "../utils/exportExcel";
+import { getManilaDateKey, shiftDateKey } from "../utils/reportFilters";
 import { Pagination } from "../components/UI";
 
 const EMPTY_MEDICINE_FORM = {
@@ -28,6 +29,9 @@ function InventoryManagement() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState("all");
+  const [expirationFilter, setExpirationFilter] = useState("all");
+  const [exportSearch, setExportSearch] = useState("");
   const [medicineForm, setMedicineForm] = useState(EMPTY_MEDICINE_FORM);
   const [transactionForm, setTransactionForm] = useState(EMPTY_TRANSACTION_FORM);
   const [page, setPage] = useState(1); const pageSize = 10;
@@ -76,6 +80,24 @@ function InventoryManagement() {
     if (recorded) setTransactionForm(EMPTY_TRANSACTION_FORM);
   };
 
+  const exportRows = useMemo(() => {
+    const today = getManilaDateKey();
+    const in30Days = shiftDateKey(today, 30);
+    const in90Days = shiftDateKey(today, 90);
+    const query = exportSearch.trim().toLowerCase();
+    return medicines.filter((medicine) => {
+      const expiration = medicine.expirationDate ? getManilaDateKey(medicine.expirationDate) : "";
+      const matchesStatus = exportStatus === "all" || medicine.status === exportStatus;
+      const matchesSearch = !query || `${medicine.medicineName} ${medicine.unit}`.toLowerCase().includes(query);
+      const matchesExpiration = expirationFilter === "all"
+        || (expirationFilter === "expired" && expiration && expiration < today)
+        || (expirationFilter === "next30" && expiration >= today && expiration <= in30Days)
+        || (expirationFilter === "next90" && expiration >= today && expiration <= in90Days)
+        || (expirationFilter === "no-date" && !expiration);
+      return matchesStatus && matchesSearch && matchesExpiration;
+    });
+  }, [expirationFilter, exportSearch, exportStatus, medicines]);
+
   const exportInventory = async () => {
     try {
       setExporting(true);
@@ -86,8 +108,9 @@ function InventoryManagement() {
         subtitle: "Current medicine stock levels and expiration monitoring",
         generatedBy: userProfile?.fullName || currentUser.displayName,
         summary: [
-          { label: "Total quantity", value: medicines.reduce((sum, medicine) => sum + Number(medicine.quantity || 0), 0) },
-          { label: "Low/out of stock", value: medicines.filter((medicine) => ["low-stock", "out-of-stock"].includes(medicine.status)).length }
+          { label: "Total quantity", value: exportRows.reduce((sum, medicine) => sum + Number(medicine.quantity || 0), 0) },
+          { label: "Stock status", value: exportStatus === "all" ? "All statuses" : exportStatus },
+          { label: "Expiration", value: expirationFilter === "all" ? "All dates" : expirationFilter }
         ],
         columns: [
           { label: "Medicine", width: 30, value: (medicine) => medicine.medicineName },
@@ -97,7 +120,7 @@ function InventoryManagement() {
           { label: "Status", width: 18, align: "center", value: (medicine) => medicine.status },
           { label: "Expiration Date", width: 20, align: "center", value: (medicine) => medicine.expirationDate ? new Date(medicine.expirationDate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila" }) : "N/A" }
         ],
-        rows: medicines
+        rows: exportRows
       });
     } catch (exportError) {
       setError(exportError.message || "Unable to create the Excel report.");
@@ -110,8 +133,16 @@ function InventoryManagement() {
     <h1>Medicine and Inventory Management</h1>
     <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
     <button onClick={loadMedicines} disabled={loading}>Refresh Inventory</button>
-    <button onClick={exportInventory} disabled={loading || exporting || medicines.length === 0}>{exporting ? "Preparing Excel Report..." : "Export Excel Report"}</button>
     {error && <p style={{ color: "red" }}>{error}</p>}{success && <p style={{ color: "green" }}>{success}</p>}
+    <section className="export-panel" aria-labelledby="inventory-export-title">
+      <div className="export-panel__heading"><div><span>Excel report</span><h2 id="inventory-export-title">Choose inventory to export</h2><p>Create a focused stock report using the options below.</p></div><strong>{exportRows.length} medicines selected</strong></div>
+      <div className="export-filter-grid">
+        <div><label htmlFor="inventory-export-status">Stock status</label><select id="inventory-export-status" value={exportStatus} onChange={(event) => setExportStatus(event.target.value)}><option value="all">All statuses</option><option value="available">Available</option><option value="low-stock">Low stock</option><option value="out-of-stock">Out of stock</option></select></div>
+        <div><label htmlFor="inventory-export-expiry">Expiration</label><select id="inventory-export-expiry" value={expirationFilter} onChange={(event) => setExpirationFilter(event.target.value)}><option value="all">All expiration dates</option><option value="expired">Already expired</option><option value="next30">Expiring within 30 days</option><option value="next90">Expiring within 90 days</option><option value="no-date">No expiration date</option></select></div>
+        <div><label htmlFor="inventory-export-search">Medicine</label><input id="inventory-export-search" type="search" placeholder="Search medicine or unit" value={exportSearch} onChange={(event) => setExportSearch(event.target.value)} /></div>
+      </div>
+      <button onClick={exportInventory} disabled={loading || exporting || exportRows.length === 0}>{exporting ? "Preparing Excel Report..." : "Export Selected Inventory"}</button>
+    </section>
     <h2>Add Medicine</h2>
     <form onSubmit={addMedicine}>
       <div><label>Medicine Name</label><input placeholder="e.g., Paracetamol" required value={medicineForm.medicineName} onChange={(e) => setMedicineForm({ ...medicineForm, medicineName: e.target.value })} /></div>
