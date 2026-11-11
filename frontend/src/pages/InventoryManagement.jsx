@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import { exportDateStamp, exportToExcelCsv } from "../utils/exportCsv";
+import { exportDateStamp, exportToExcel } from "../utils/exportExcel";
 import { Pagination } from "../components/UI";
 
 const EMPTY_MEDICINE_FORM = {
@@ -21,12 +21,13 @@ const EMPTY_TRANSACTION_FORM = {
 };
 
 function InventoryManagement() {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const navigate = useNavigate();
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [exporting, setExporting] = useState(false);
   const [medicineForm, setMedicineForm] = useState(EMPTY_MEDICINE_FORM);
   const [transactionForm, setTransactionForm] = useState(EMPTY_TRANSACTION_FORM);
   const [page, setPage] = useState(1); const pageSize = 10;
@@ -75,26 +76,41 @@ function InventoryManagement() {
     if (recorded) setTransactionForm(EMPTY_TRANSACTION_FORM);
   };
 
-  const exportInventory = () => {
-    exportToExcelCsv(
-      `pagasa-medicine-inventory-${exportDateStamp()}.csv`,
-      [
-        { label: "Medicine", value: (medicine) => medicine.medicineName },
-        { label: "Quantity", value: (medicine) => medicine.quantity },
-        { label: "Unit", value: (medicine) => medicine.unit },
-        { label: "Low-Stock Warning Level", value: (medicine) => medicine.minimumStock },
-        { label: "Status", value: (medicine) => medicine.status },
-        { label: "Expiration Date", value: (medicine) => medicine.expirationDate ? new Date(medicine.expirationDate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila" }) : "N/A" }
-      ],
-      medicines
-    );
+  const exportInventory = async () => {
+    try {
+      setExporting(true);
+      setError("");
+      await exportToExcel({
+        filename: `pagasa-medicine-inventory-${exportDateStamp()}.xlsx`,
+        title: "MEDICINE INVENTORY REPORT",
+        subtitle: "Current medicine stock levels and expiration monitoring",
+        generatedBy: userProfile?.fullName || currentUser.displayName,
+        summary: [
+          { label: "Total quantity", value: medicines.reduce((sum, medicine) => sum + Number(medicine.quantity || 0), 0) },
+          { label: "Low/out of stock", value: medicines.filter((medicine) => ["low-stock", "out-of-stock"].includes(medicine.status)).length }
+        ],
+        columns: [
+          { label: "Medicine", width: 30, value: (medicine) => medicine.medicineName },
+          { label: "Quantity", width: 14, align: "center", value: (medicine) => medicine.quantity },
+          { label: "Unit", width: 18, value: (medicine) => medicine.unit },
+          { label: "Low-Stock Warning Level", width: 22, align: "center", value: (medicine) => medicine.minimumStock },
+          { label: "Status", width: 18, align: "center", value: (medicine) => medicine.status },
+          { label: "Expiration Date", width: 20, align: "center", value: (medicine) => medicine.expirationDate ? new Date(medicine.expirationDate).toLocaleDateString("en-PH", { timeZone: "Asia/Manila" }) : "N/A" }
+        ],
+        rows: medicines
+      });
+    } catch (exportError) {
+      setError(exportError.message || "Unable to create the Excel report.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   return <div>
     <h1>Medicine and Inventory Management</h1>
     <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
     <button onClick={loadMedicines} disabled={loading}>Refresh Inventory</button>
-    <button onClick={exportInventory} disabled={loading || medicines.length === 0}>Export for Excel</button>
+    <button onClick={exportInventory} disabled={loading || exporting || medicines.length === 0}>{exporting ? "Preparing Excel Report..." : "Export Excel Report"}</button>
     {error && <p style={{ color: "red" }}>{error}</p>}{success && <p style={{ color: "green" }}>{success}</p>}
     <h2>Add Medicine</h2>
     <form onSubmit={addMedicine}>

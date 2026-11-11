@@ -2,15 +2,16 @@ import { apiUrl } from "../config/api";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import { exportDateStamp, exportToExcelCsv } from "../utils/exportCsv";
+import { exportDateStamp, exportToExcel } from "../utils/exportExcel";
 import { Pagination } from "../components/UI";
 
 function ActivityLogs() {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [exporting, setExporting] = useState(false);
   const [page, setPage] = useState(1); const pageSize = 15;
 
   const loadLogs = useCallback(async () => {
@@ -35,18 +36,33 @@ function ActivityLogs() {
     loadLogs();
   }, [loadLogs]);
 
-  const exportLogs = () => {
-    exportToExcelCsv(
-      `pagasa-activity-logs-${exportDateStamp()}.csv`,
-      [
-        { label: "Date and Time", value: (log) => new Date(log.createdAt).toLocaleString("en-PH", { timeZone: "Asia/Manila" }) },
-        { label: "User", value: (log) => log.userId?.fullName || "Unknown user" },
-        { label: "Module", value: (log) => log.module },
-        { label: "Action", value: (log) => log.action },
-        { label: "Description", value: (log) => log.description }
-      ],
-      logs
-    );
+  const exportLogs = async () => {
+    try {
+      setExporting(true);
+      setError("");
+      await exportToExcel({
+        filename: `pagasa-activity-logs-${exportDateStamp()}.xlsx`,
+        title: "SYSTEM ACTIVITY LOG REPORT",
+        subtitle: "Formal record of administrative and operational system activity",
+        generatedBy: userProfile?.fullName || currentUser.displayName,
+        summary: [
+          { label: "Report type", value: "Activity audit" },
+          { label: "Coverage", value: "All available records" }
+        ],
+        columns: [
+          { label: "Date and Time", width: 24, value: (log) => new Date(log.createdAt).toLocaleString("en-PH", { timeZone: "Asia/Manila" }) },
+          { label: "User", width: 24, value: (log) => log.userId?.fullName || "Unknown user" },
+          { label: "Module", width: 18, value: (log) => log.module },
+          { label: "Action", width: 25, value: (log) => log.action },
+          { label: "Description", width: 50, value: (log) => log.description }
+        ],
+        rows: logs
+      });
+    } catch (exportError) {
+      setError(exportError.message || "Unable to create the Excel report.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -54,8 +70,8 @@ function ActivityLogs() {
       <h1>Activity Logs</h1>
       <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
       <button onClick={loadLogs} disabled={loading}>Refresh</button>
-      <button onClick={exportLogs} disabled={loading || logs.length === 0}>
-        Export for Excel
+      <button onClick={exportLogs} disabled={loading || exporting || logs.length === 0}>
+        {exporting ? "Preparing Excel Report..." : "Export Excel Report"}
       </button>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {loading ? (
