@@ -13,6 +13,8 @@ import {
 import verifyFirebaseToken from "../middleware/firebaseAuthMiddleware.js";
 import protect from "../middleware/authMiddleware.js";
 import authorizeRoles from "../middleware/roleMiddleware.js";
+import { firebaseAuth } from "../config/firebase.js";
+import { createSetUserPassword } from "../controllers/adminPasswordController.js";
 
 const router = express.Router();
 
@@ -64,6 +66,13 @@ router.patch(
   protect,
   authorizeRoles("admin"),
   updateUserStatus
+);
+
+router.patch(
+  "/:id/password",
+  protect,
+  authorizeRoles("admin"),
+  createSetUserPassword(firebaseAuth)
 );
 
 export default router;

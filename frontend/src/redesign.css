@@ -538,7 +538,8 @@ tbody tr:hover td { background: #fcf6f7; }
 .password-input-wrap { position: relative; }
 .password-input-wrap input { padding-right: 50px; }
 .auth-card .password-toggle,
-.auth-form-card .password-toggle {
+.auth-form-card .password-toggle,
+.confirmation-dialog .password-toggle {
   position: absolute;
   top: 50%;
   right: 6px;
@@ -556,12 +557,19 @@ tbody tr:hover td { background: #fcf6f7; }
   transform: translateY(-50%);
 }
 .auth-card .password-toggle:hover:not(:disabled),
-.auth-form-card .password-toggle:hover:not(:disabled) {
+.auth-form-card .password-toggle:hover:not(:disabled),
+.confirmation-dialog .password-toggle:hover:not(:disabled) {
   color: var(--pg-teal-700);
   background: #faeef0;
   transform: translateY(-50%);
 }
 .password-toggle svg { fill: currentColor; }
+.admin-password-form { display: block; margin: 1rem 0 0; padding: 0; border: 0; box-shadow: none; }
+.admin-password-form > div + div { margin-top: 1rem; }
+.account-password-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.account-password-actions button { margin: 0; }
+[data-theme="dark"] .confirmation-dialog .password-toggle { color: #c5c5ca; }
+[data-theme="dark"] .confirmation-dialog .password-toggle:hover:not(:disabled) { color: #fff; background: #38282c; }
 [data-theme="dark"] .auth-form-card .password-toggle { color: #c5c5ca; background: transparent; }
 [data-theme="dark"] .auth-form-card .password-toggle:hover:not(:disabled) { color: #ffffff; background: #38282c; }
 
@@ -844,8 +852,8 @@ tbody tr:hover td { background: #fcf6f7; }
 }
 [data-theme="dark"] .quick-actions button:hover:not(:disabled) { color: #fff; background: var(--pg-teal-700); }
 [data-theme="dark"] .alert--info { color: #f0c8cd; background: #302326; border-color: #513137; }
-.auth-form-card .alert--error { color: #7f1d1d; background: #fef2f2; border-color: #b91c1c; font-weight: 700; line-height: 1.5; }
-[data-theme="dark"] .auth-form-card .alert--error { color: #fecaca; background: #450a0a; border-color: #f87171; }
+.auth-form-card .alert--error, .confirmation-dialog .alert--error { color: #7f1d1d; background: #fef2f2; border-color: #b91c1c; font-weight: 700; line-height: 1.5; }
+[data-theme="dark"] .auth-form-card .alert--error, [data-theme="dark"] .confirmation-dialog .alert--error { color: #fecaca; background: #450a0a; border-color: #f87171; }
 [data-theme="dark"] .image-picker { background: #202023; border-color: #505057; }
 [data-theme="dark"] .announcement-image { background: #18181b; }
 

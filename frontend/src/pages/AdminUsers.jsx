@@ -4,9 +4,10 @@ import { useAuth } from "../context/useAuth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageHeader, StatusBadge, Alert, Pagination } from "../components/UI";
 import ConfirmDialog from "../components/ConfirmDialog";
+import AdminPasswordDialog from "../components/AdminPasswordDialog";
 
 function AdminUsers() {
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile, resetPassword } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const category = ["staff", "admin"].includes(searchParams.get("role")) ? searchParams.get("role") : "patient";
@@ -20,6 +21,8 @@ function AdminUsers() {
   const [pendingChange, setPendingChange] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [notice, setNotice] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [passwordTarget, setPasswordTarget] = useState(null);
   const pageSize = 10;
   const filteredUsers = users.filter((user) => user.role === category && `${user.fullName} ${user.email}`.toLowerCase().includes(search.toLowerCase()));
   const visiblePage = Math.min(page, Math.max(1, Math.ceil(filteredUsers.length / pageSize)));
@@ -96,7 +99,28 @@ const handleStatusChange = async (userId, newStatus) => {
 const confirmPendingChange = () => {
   if (!pendingChange) return;
   if (pendingChange.type === "role") handleRoleChange(pendingChange.user._id, pendingChange.value);
+  else if (pendingChange.type === "password-reset") handlePasswordReset(pendingChange.user);
   else handleStatusChange(pendingChange.user._id, pendingChange.value);
+};
+
+const handlePasswordReset = async (user) => {
+  if (actionLoading) return;
+  setActionLoading(true);
+  setResetError("");
+  setNotice("");
+  try {
+    await resetPassword(user.email);
+    setNotice(`Password reset email requested for ${user.email}. Ask the account owner to check their inbox and spam folder.`);
+    setPendingChange(null);
+  } catch (resetError) {
+    setResetError(resetError.code === "auth/too-many-requests"
+      ? "Too many reset requests. Please wait before trying again."
+      : resetError.code === "auth/network-request-failed"
+        ? "Unable to connect. Check your internet connection and try again."
+        : "Unable to send the password reset email. Please try again.");
+  } finally {
+    setActionLoading(false);
+  }
 };
 
   const fetchUsers = async () => {
@@ -159,6 +183,7 @@ const confirmPendingChange = () => {
                 <th>Role</th>
                 <th>Status</th>
                 <th>Inactive Remark</th>
+                <th>Password</th>
               </tr>
             </thead>
 
@@ -194,14 +219,21 @@ const confirmPendingChange = () => {
   </select>
 </td>
                   <td className="account-status-remark">{user.status === "inactive" ? <>{user.statusRemark || "No remark provided"} <button type="button" onClick={() => setPendingChange({ type: "status", user, value: "inactive", remark: user.statusRemark || "" })}>Edit Remark</button></> : "—"}</td>
+                  <td><div className="account-password-actions"><button type="button" disabled={actionLoading || user._id === userProfile?._id} title={user._id === userProfile?._id ? "Change your own password in profile settings" : undefined} aria-label={`Set password for ${user.fullName}`} onClick={() => setPasswordTarget(user)}>Set Password</button><button type="button" disabled={actionLoading || !user.email} aria-label={`Send password reset email to ${user.fullName}`} onClick={() => { setResetError(""); setPendingChange({ type: "password-reset", user }); }}>Send Reset Email</button></div></td>
                 </tr>
               ))}
-              {!filteredUsers.length && <tr><td colSpan="5">No accounts found in this category.</td></tr>}
+              {!filteredUsers.length && <tr><td colSpan="6">No accounts found in this category.</td></tr>}
             </tbody>
           </table><Pagination page={visiblePage} totalItems={filteredUsers.length} pageSize={pageSize} onPageChange={setPage} /></section>
         </>
       )}
-      <ConfirmDialog open={Boolean(pendingChange)} title={pendingChange?.type === "role" ? "Change User Role" : "Change Account Status"} confirmLabel="Confirm Change" danger={pendingChange?.type === "status" && pendingChange?.value === "inactive"} busy={actionLoading} onCancel={() => setPendingChange(null)} onConfirm={confirmPendingChange}><p>Confirm this account change before it is applied.</p><div className="review-list"><p><strong>User:</strong> {pendingChange?.user?.fullName}</p><p><strong>{pendingChange?.type === "role" ? "New role" : "New status"}:</strong> {pendingChange?.value}</p></div>{pendingChange?.type === "status" && pendingChange.value === "inactive" && <div><label htmlFor="inactive-remark">Reason for inactive status (optional)</label><textarea id="inactive-remark" value={pendingChange.remark} maxLength={500} rows={3} onChange={(event) => setPendingChange({ ...pendingChange, remark: event.target.value })} placeholder="Explain why this account is inactive" /><small>{pendingChange.remark.length}/500 characters</small></div>}</ConfirmDialog>
+      <ConfirmDialog open={Boolean(pendingChange)} title={pendingChange?.type === "password-reset" ? "Send Password Reset Email" : pendingChange?.type === "role" ? "Change User Role" : "Change Account Status"} confirmLabel={pendingChange?.type === "password-reset" ? "Send Reset Link" : "Confirm Change"} danger={pendingChange?.type === "status" && pendingChange?.value === "inactive"} busy={actionLoading} onCancel={() => setPendingChange(null)} onConfirm={confirmPendingChange}>
+        <p>{pendingChange?.type === "password-reset" ? "Send a password reset link to this account's registered email. The account owner will choose a new password using the link." : "Confirm this account change before it is applied."}</p>
+        <div className="review-list"><p><strong>User:</strong> {pendingChange?.user?.fullName}</p>{pendingChange?.type === "password-reset" ? <p><strong>Email:</strong> {pendingChange.user.email}</p> : <p><strong>{pendingChange?.type === "role" ? "New role" : "New status"}:</strong> {pendingChange?.value}</p>}</div>
+        {pendingChange?.type === "password-reset" && resetError && <div role="alert"><Alert>{resetError}</Alert></div>}
+        {pendingChange?.type === "status" && pendingChange.value === "inactive" && <div><label htmlFor="inactive-remark">Reason for inactive status (optional)</label><textarea id="inactive-remark" value={pendingChange.remark} maxLength={500} rows={3} onChange={(event) => setPendingChange({ ...pendingChange, remark: event.target.value })} placeholder="Explain why this account is inactive" /><small>{pendingChange.remark.length}/500 characters</small></div>}
+      </ConfirmDialog>
+      {passwordTarget && <AdminPasswordDialog key={passwordTarget._id} user={passwordTarget} onCancel={() => setPasswordTarget(null)} onSuccess={(message) => { setNotice(message); setPasswordTarget(null); }} />}
     </div>
   );
 }
