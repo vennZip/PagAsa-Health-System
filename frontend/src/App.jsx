@@ -19,8 +19,7 @@ import QueueManagement from "./pages/QueueManagement";
 import MyQueueStatus from "./pages/MyQueueStatus";
 import InventoryManagement from "./pages/InventoryManagement";
 import ServiceManagement from "./pages/ServiceManagement";
-import ActivityLogs from "./pages/ActivityLogs";
-import ReportsAnalytics from "./pages/ReportsAnalytics";
+import ReportsActivity from "./pages/ReportsActivity";
 import ClinicCalendar from "./pages/ClinicCalendar";
 import PatientArchive from "./pages/PatientArchive";
 import AppLayout from "./components/AppLayout";
@@ -219,8 +218,8 @@ function AppContent() {
       <Route path="/notifications" element={<Navigate to="/dashboard" replace />} />
       <Route path="/clinic-calendar" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><ClinicCalendar /></ProtectedRoute>} />
       <Route path="/services-management" element={<ProtectedRoute allowedRoles={["admin"]}><ServiceManagement /></ProtectedRoute>} />
-      <Route path="/activity-logs" element={<ProtectedRoute allowedRoles={["admin"]}><ActivityLogs /></ProtectedRoute>} />
-      <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><ReportsAnalytics /></ProtectedRoute>} />
+      <Route path="/activity-logs" element={<ProtectedRoute allowedRoles={["admin"]}><Navigate to="/reports?view=activity" replace /></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin", "staff"]}><ReportsActivity /></ProtectedRoute>} />
 
       {/* Admin User Management */}
 <Route

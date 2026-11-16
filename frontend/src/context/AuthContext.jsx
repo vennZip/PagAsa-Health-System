@@ -15,6 +15,7 @@ import {
 } from "firebase/auth";
 
 import { auth } from "../firebase";
+import { capitalizeName } from "../utils/name";
 
 // Context and provider intentionally share this module.
 // eslint-disable-next-line react-refresh/only-export-components
@@ -75,10 +76,10 @@ export const AuthProvider = ({ children }) => {
     }
 
     setUserProfile(data.data);
-    await fetchPatientProfileStatus(firebaseUser, data.data);
+    setHasPatientProfile(data.hasPatientProfile);
 
     return data.data;
-  }, [fetchPatientProfileStatus]);
+  }, []);
 
   const activateSession = async (firebaseUser) => {
     const token = await firebaseUser.getIdToken();
@@ -93,7 +94,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Register a new patient account
-  const register = async (fullName, email, password, privacyConsent) => {
+  const register = async (names, email, password, privacyConsent) => {
+    const normalizedNames = Object.fromEntries(Object.entries(names).map(([key, value]) => [key, key === "suffix" ? value.trim() : capitalizeName(value.trim())]));
+    const fullName = ["firstName", "secondName", "middleName", "lastName", "suffix"].map((key) => normalizedNames[key]).filter(Boolean).join(" ");
     registrationInProgress.current = true;
 
     try {
@@ -119,7 +122,7 @@ export const AuthProvider = ({ children }) => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`
           },
-          body: JSON.stringify({ fullName, privacyConsent })
+          body: JSON.stringify({ ...normalizedNames, privacyConsent })
         }
       );
 
@@ -300,28 +303,17 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (!currentUser) return undefined;
-
-    const verifySession = async () => {
-      try {
-        const token = await currentUser.getIdToken();
-        const response = await fetch(apiUrl("/api/users/me"), {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (response.status === 401) {
-          sessionStorage.setItem(
-            "pagasa_logout_notice",
-            "This account was signed in somewhere else, so this session was logged out."
-          );
-          await logout();
-        }
-      } catch (error) {
-        console.error("Session verification failed:", error);
-      }
+    // Notification requests already validate the session on the server.
+    // Reuse that result instead of polling /users/me independently.
+    const rejectSession = async (event) => {
+      sessionStorage.setItem("pagasa_logout_notice", event.detail || "Your session has ended. Please log in again.");
+      await signOut(auth);
+      setCurrentUser(null);
+      setUserProfile(null);
+      setHasPatientProfile(null);
     };
-
-    const interval = window.setInterval(verifySession, 15000);
-    return () => window.clearInterval(interval);
+    window.addEventListener("pagasa:session-rejected", rejectSession);
+    return () => window.removeEventListener("pagasa:session-rejected", rejectSession);
   }, [currentUser]);
 
   const value = {

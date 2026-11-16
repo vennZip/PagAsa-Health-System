@@ -1,17 +1,12 @@
 import User from "../models/User.js";
+import Patient from "../models/Patient.js";
+import { logActivity } from "../utils/activityLogger.js";
 
 // Register a user profile in MongoDB
 export const registerUser = async (req, res) => {
   try {
     const { uid, email, authTime } = req.firebaseUser;
-    const { fullName, privacyConsent } = req.body;
-
-    if (!fullName || !email) {
-      return res.status(400).json({
-        success: false,
-        message: "Full name and verified email are required."
-      });
-    }
+    const { privacyConsent } = req.body;
 
     const existingUser = await User.findOne({
       firebaseUid: uid
@@ -23,6 +18,19 @@ export const registerUser = async (req, res) => {
         message: "This user profile is already registered."
       });
     }
+
+    const names = {};
+    for (const field of ["firstName", "secondName", "middleName", "lastName", "suffix"]) {
+      const value = req.body[field] ?? "";
+      if (typeof value !== "string" || value.trim().length > (field === "suffix" ? 30 : 100)) {
+        return res.status(400).json({ success: false, message: "Please enter valid name fields." });
+      }
+      names[field] = field === "suffix" ? value.trim() : value.trim().replace(/^\p{L}/u, (letter) => letter.toLocaleUpperCase("en-PH"));
+    }
+    if (!names.firstName || !names.lastName || !email) {
+      return res.status(400).json({ success: false, message: "First name, last name, and verified email are required." });
+    }
+    const fullName = Object.values(names).filter(Boolean).join(" ");
 
     const existingEmail = await User.findOne({ email });
 
@@ -43,6 +51,7 @@ export const registerUser = async (req, res) => {
     const user = await User.create({
       firebaseUid: uid,
       fullName,
+      ...names,
       email,
       role: "patient",
       privacyConsent: {
@@ -121,7 +130,8 @@ export const getCurrentUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: user
+      data: user,
+      hasPatientProfile: user.role !== "patient" || Boolean(await Patient.exists({ userId: user._id }))
     });
 
   } catch (error) {
@@ -274,7 +284,11 @@ export const updateUserRole = async (req, res) => {
 export const updateUserStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, statusRemark = "" } = req.body;
+
+    if (typeof statusRemark !== "string" || statusRemark.trim().length > 500) {
+      return res.status(400).json({ success: false, message: "The status remark must be 500 characters or fewer." });
+    }
 
     const allowedStatuses = ["active", "inactive"];
 
@@ -303,7 +317,9 @@ export const updateUserStatus = async (req, res) => {
     }
 
     user.status = status;
+    user.statusRemark = status === "inactive" ? statusRemark.trim() : "";
     await user.save();
+    await logActivity({ userId: req.user.id, action: "Changed account status", module: "Users", description: `${user.fullName}: ${status}.${user.statusRemark ? ` Remark: ${user.statusRemark}` : ""}`, targetId: user._id, ipAddress: req.ip });
 
     res.status(200).json({
       success: true,
@@ -312,7 +328,8 @@ export const updateUserStatus = async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
-        status: user.status
+        status: user.status,
+        statusRemark: user.statusRemark
       }
     });
 

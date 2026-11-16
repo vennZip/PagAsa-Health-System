@@ -60,6 +60,7 @@ function InventoryManagement() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Inventory action failed.");
       setSuccess(message || data.message);
+      window.dispatchEvent(new Event("pagasa:refresh-notifications"));
       await loadMedicines();
       return true;
     } catch (err) {

@@ -221,7 +221,7 @@ function Login() {
                 </button>
               </div>
 
-              {error && <p className="alert alert--error" style={{ margin: "10px 0" }}>{error}</p>}
+              {error && <p className="alert alert--error" role="alert" style={{ margin: "10px 0" }}>{error}</p>}
               {message && <p className="alert alert--success">{message}</p>}
 
               <button type="submit" disabled={loading || resetLoading}>

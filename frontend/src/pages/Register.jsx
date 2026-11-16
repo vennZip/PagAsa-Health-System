@@ -4,6 +4,7 @@ import { useAuth } from "../context/useAuth";
 import { Icon } from "../components/Icons";
 import AuthBrandPanel from "../components/AuthBrandPanel";
 import ThemeSelector from "../components/ThemeSelector";
+import { capitalizeName } from "../utils/name";
 
 const S = {
   page: {
@@ -90,7 +91,11 @@ function Register() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    secondName: "",
+    middleName: "",
+    lastName: "",
+    suffix: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -106,9 +111,10 @@ function Register() {
   const passwordInputRef = useRef(null);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: ["firstName", "secondName", "middleName", "lastName"].includes(name) ? capitalizeName(value) : value
     });
   };
 
@@ -135,7 +141,7 @@ function Register() {
     try {
       setLoading(true);
       await register(
-        formData.fullName,
+        { firstName: formData.firstName, secondName: formData.secondName, middleName: formData.middleName, lastName: formData.lastName, suffix: formData.suffix },
         formData.email,
         formData.password,
         true
@@ -162,7 +168,11 @@ function Register() {
       }
       setShowConsent(false);
       setFormData({
-        fullName: "",
+        firstName: "",
+        secondName: "",
+        middleName: "",
+        lastName: "",
+        suffix: "",
         email: "",
         password: "",
         confirmPassword: ""
@@ -187,16 +197,18 @@ function Register() {
 
           <div className="auth-card" style={{ width: "auto", padding: 0, border: 0, boxShadow: "none", borderRadius: 0, background: "transparent" }}>
             <form onSubmit={handleSubmit}>
-              <div>
-                <label>Full Name</label>
-                <input
-                  ref={fullNameInputRef}
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  required
-                />
+              <div className="registration-name-grid">
+                {[["firstName", "First Name", true], ["secondName", "Second Name", false], ["middleName", "Middle Name", false], ["lastName", "Last Name", true]].map(([name, label, required]) => (
+                  <div key={name}>
+                    <label htmlFor={`register-${name}`}>{label}{!required && " (optional)"}</label>
+                    <input id={`register-${name}`} ref={name === "firstName" ? fullNameInputRef : undefined} type="text" name={name} value={formData[name]} onChange={handleChange} maxLength={100} required={required} pattern={required ? ".*\\S.*" : undefined} autoCapitalize="words" autoCorrect="off" autoComplete={name === "firstName" ? "given-name" : name === "lastName" ? "family-name" : "off"} />
+                  </div>
+                ))}
+                <div>
+                  <label htmlFor="register-suffix">Suffix (optional)</label>
+                  <input id="register-suffix" name="suffix" list="name-suffixes" value={formData.suffix} onChange={handleChange} maxLength={30} placeholder="e.g. Jr., Sr., III" />
+                  <datalist id="name-suffixes">{["Jr.", "Sr.", "II", "III", "IV", "V", "VI"].map((suffix) => <option key={suffix} value={suffix} />)}</datalist>
+                </div>
               </div>
 
               <div>

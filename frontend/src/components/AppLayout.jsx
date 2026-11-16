@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { Icon } from "./Icons";
@@ -19,9 +19,7 @@ const navigation = [
   ["Inventory", "/inventory", "inventory", ["admin", "staff"]],
   ["Services", "/services-management", "service", ["admin"]],
   ["Clinic Calendar", "/clinic-calendar", "calendar", ["admin", "staff"]],
-  ["Activity Logs", "/activity-logs", "logs", ["admin"]],
-  ["Reports", "/reports", "reports", ["admin", "staff"]],
-  ["Profile & Settings", "/account-settings", "profile", ["admin", "staff", "patient"]],
+  ["Reports & Activity", "/reports", "reports", ["admin", "staff"]],
 ];
 
 const clockFormatter = new Intl.DateTimeFormat("en-PH", {
@@ -52,7 +50,9 @@ function LiveClock() {
 function AppLayout({ children }) {
   const { userProfile, logout, role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [usersOpen, setUsersOpen] = useState(false);
   const initials = (userProfile?.fullName || "Health Center")
     .split(" ")
     .map((word) => word[0])
@@ -89,7 +89,12 @@ function AppLayout({ children }) {
             <div className="top-navigation__inner">
               {navigation
                 .filter((item) => item[3].includes(role))
-                .map(([label, to, icon]) => (
+                .map(([label, to, icon]) => to === "/admin/users" ? (
+                  <div className="nav-dropdown" key={to} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setUsersOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") { setUsersOpen(false); event.currentTarget.querySelector("button").focus(); } }}>
+                    <button type="button" className={`nav-dropdown-trigger ${location.pathname === to ? "active" : ""}`} aria-expanded={usersOpen} aria-controls="users-submenu" onClick={() => setUsersOpen((open) => !open)}><Icon name={icon} /><span>{label}</span><span aria-hidden="true">{usersOpen ? "▴" : "▾"}</span></button>
+                    {usersOpen && <div id="users-submenu" className="nav-dropdown-menu">{[["patient", "Users"], ["staff", "Staffs"], ["admin", "Admins"]].map(([value, text]) => <NavLink key={value} to={`${to}?role=${value}`} className={() => location.pathname === to && (new URLSearchParams(location.search).get("role") || "patient") === value ? "active" : ""} onClick={() => { setIsOpen(false); setUsersOpen(false); }}>{text}</NavLink>)}</div>}
+                  </div>
+                ) : (
                   <NavLink key={to} to={to} onClick={() => setIsOpen(false)}>
                     <Icon name={icon} />
                     <span>{label}</span>

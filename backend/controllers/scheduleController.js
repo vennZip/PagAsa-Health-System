@@ -1,5 +1,6 @@
 import Appointment from "../models/Appointment.js";
 import ClinicSchedule from "../models/ClinicSchedule.js";
+import { appointmentInstant, isFutureAppointment } from "../utils/appointmentTime.js";
 
 const defaults = () => ({
   name: "default",
@@ -33,7 +34,7 @@ const timeLabel = (total) => `${String(Math.floor(total / 60)).padStart(2, "0")}
 
 export const buildAvailability = async (requestedDate) => {
   const key = dateKey(requestedDate);
-  if (!key) return { error: "Choose a valid appointment date." };
+  if (!key || !appointmentInstant(key, "00:00")) return { error: "Choose a valid appointment date." };
   const selectedDate = new Date(`${key}T00:00:00.000Z`);
   const today = new Date();
   const todayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(today);
@@ -57,7 +58,8 @@ export const buildAvailability = async (requestedDate) => {
   const slots = [];
   for (let value = minutes(day.openTime); value + schedule.slotMinutes <= minutes(day.closeTime); value += schedule.slotMinutes) {
     const time = timeLabel(value);
-    slots.push({ time, available: !takenSet.has(time) });
+    const elapsed = !isFutureAppointment(key, time);
+    slots.push({ time, elapsed, available: !elapsed && !takenSet.has(time) });
   }
   return { schedule, date: key, isOpen: true, slots };
 };

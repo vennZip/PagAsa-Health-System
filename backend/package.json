@@ -5,6 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
+    "test": "node --test",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "reset:testing-data": "node scripts/resetTestingData.js"

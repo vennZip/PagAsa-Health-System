@@ -4,6 +4,8 @@ import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Pagination } from "../components/UI";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { isFutureAppointment } from "../utils/appointmentTime";
+import { getManilaDateKey } from "../utils/reportFilters";
 
 function Appointments() {
   const { currentUser } = useAuth();
@@ -25,7 +27,13 @@ function Appointments() {
   const [historyPage, setHistoryPage] = useState(1);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [now, setNow] = useState(Date.now);
   const pageSize = 6;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 15000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const [formData, setFormData] = useState({
     serviceId: "",
@@ -103,7 +111,9 @@ function Appointments() {
     // The request updates state only after its asynchronous work completes.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAppointments();
-    const interval = window.setInterval(fetchAppointments, 10000);
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") fetchAppointments();
+    }, 60000);
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") fetchAppointments();
     };
@@ -119,7 +129,8 @@ function Appointments() {
     if (e.target.name === "appointmentDate") setAvailability(null);
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
+      ...(e.target.name === "appointmentDate" ? { appointmentTime: "" } : {})
     });
   };
 
@@ -147,6 +158,11 @@ function Appointments() {
 
     setError("");
     setSuccess("");
+
+    if (!isFutureAppointment(formData.appointmentDate, formData.appointmentTime)) {
+      setError("Choose a future appointment date and time (Philippine time).");
+      return;
+    }
 
     try {
       setSaving(true);
@@ -311,7 +327,7 @@ function Appointments() {
           name="appointmentDate"
           value={formData.appointmentDate}
           onChange={handleChange}
-          min={new Date().toLocaleDateString("en-CA")}
+          min={getManilaDateKey(now)}
           required
         />
 
@@ -326,9 +342,10 @@ function Appointments() {
           onChange={handleChange}
           disabled={availabilityLoading || !availability?.isOpen}
           required
-        ><option value="">{availabilityLoading ? "Checking available times..." : "Choose an available time"}</option>{availability?.slots.filter((slot) => slot.available).map((slot) => <option key={slot.time} value={slot.time}>{slot.time}</option>)}</select>
+        ><option value="">{availabilityLoading ? "Checking available times..." : "Choose an available time"}</option>{availability?.slots.filter((slot) => slot.available && isFutureAppointment(formData.appointmentDate, slot.time, now)).map((slot) => <option key={slot.time} value={slot.time}>{slot.time}</option>)}</select>
+        <small>All appointment times are in Philippine time.</small>
         {formData.appointmentDate && availability && !availability.isOpen && <p className="alert alert--error">The clinic is closed on this date. Please choose another day.</p>}
-        {availability?.isOpen && !availability.slots.some((slot) => slot.available) && <p className="alert alert--error">This date is fully booked. Please choose another day.</p>}
+        {availability?.isOpen && !availability.slots.some((slot) => slot.available && isFutureAppointment(formData.appointmentDate, slot.time, now)) && <p className="alert alert--error">No future appointment times are available on this date. Please choose another day.</p>}
 
         <br /><br />
 
@@ -341,6 +358,7 @@ function Appointments() {
             services.length === 0
             || !availability?.isOpen
             || !formData.appointmentTime
+            || !isFutureAppointment(formData.appointmentDate, formData.appointmentTime, now)
           }
         >
           {saving ? "Submitting..." : "Submit Appointment Request"}

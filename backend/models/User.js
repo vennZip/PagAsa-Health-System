@@ -14,6 +14,13 @@ const userSchema = new mongoose.Schema(
       trim: true
     },
 
+    firstName: { type: String, trim: true, maxlength: 100 },
+    secondName: { type: String, trim: true, maxlength: 100 },
+    middleName: { type: String, trim: true, maxlength: 100 },
+    lastName: { type: String, trim: true, maxlength: 100 },
+    suffix: { type: String, trim: true, maxlength: 30 },
+    statusRemark: { type: String, trim: true, maxlength: 500, default: "" },
+
     email: {
       type: String,
       required: true,

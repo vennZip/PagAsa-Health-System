@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { logActivity } from "../utils/activityLogger.js";
 import { notifyPatient, notifyRoles } from "../utils/notificationService.js";
 import { buildAvailability } from "./scheduleController.js";
+import { isFutureAppointment } from "../utils/appointmentTime.js";
 
 // POST: Patient requests an appointment
 export const createAppointment = async (req, res) => {
@@ -17,6 +18,10 @@ export const createAppointment = async (req, res) => {
         success: false,
         message: "Please provide the service, date, and time."
       });
+    }
+
+    if (!isFutureAppointment(appointmentDate, appointmentTime)) {
+      return res.status(400).json({ success: false, message: "Choose a future appointment date and time (Philippine time)." });
     }
 
     // Find the logged-in patient's profile
@@ -57,10 +62,7 @@ export const createAppointment = async (req, res) => {
     // Validate appointment date
     const selectedDate = new Date(appointmentDate);
 
-    if (
-      Number.isNaN(selectedDate.getTime()) ||
-      selectedDate < new Date(new Date().setHours(0, 0, 0, 0))
-    ) {
+    if (Number.isNaN(selectedDate.getTime())) {
       return res.status(400).json({
         success: false,
         message: "Please select a valid current or future appointment date."
@@ -77,6 +79,9 @@ export const createAppointment = async (req, res) => {
     const selectedSlot = availability.slots.find((slot) => slot.time === appointmentTime);
     if (!selectedSlot) {
       return res.status(400).json({ success: false, message: "Choose one of the clinic's available 30-minute appointment times." });
+    }
+    if (selectedSlot.elapsed || !isFutureAppointment(appointmentDate, appointmentTime)) {
+      return res.status(400).json({ success: false, message: "This appointment time has passed. Choose a future time (Philippine time)." });
     }
     if (!selectedSlot.available) {
       return res.status(409).json({ success: false, message: "That appointment time was just taken. Please choose another available slot." });
