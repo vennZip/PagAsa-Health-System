@@ -5,6 +5,8 @@ import { auth } from "../firebase";
 import AuthBrandPanel from "../components/AuthBrandPanel";
 import ThemeSelector from "../components/ThemeSelector";
 import { Icon } from "../components/Icons";
+import PasswordRequirements from "../components/PasswordRequirements";
+import { isValidPassword, PASSWORD_POLICY_MESSAGE, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "../utils/passwordPolicy";
 
 const emailActions = {
   verifyEmail: {
@@ -82,8 +84,8 @@ function ResetPassword() {
     event.preventDefault();
     setError("");
 
-    if (password.length < 6) {
-      setError("Use a password with at least 6 characters.");
+    if (!isValidPassword(password)) {
+      setError(PASSWORD_POLICY_MESSAGE);
       return;
     }
 
@@ -105,7 +107,7 @@ function ResetPassword() {
       }
 
       setError(resetError.code === "auth/weak-password"
-        ? "Choose a stronger password."
+        ? PASSWORD_POLICY_MESSAGE
         : "We could not update your password. Please try again.");
       setStatus("ready");
     }
@@ -181,7 +183,7 @@ function ResetPassword() {
                 <div>
                   <label htmlFor="new-password">New password</label>
                   <div className="password-input-wrap">
-                    <input id="new-password" type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" minLength={6} required />
+                    <input id="new-password" type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" minLength={PASSWORD_MIN_LENGTH} maxLength={PASSWORD_MAX_LENGTH} aria-describedby="reset-password-requirements" required />
                     <button type="button" className="password-toggle" aria-label={showPassword ? "Hide passwords" : "Show passwords"} aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)}>
                       <Icon name={showPassword ? "eyeOff" : "eye"} size={20} />
                     </button>
@@ -189,8 +191,9 @@ function ResetPassword() {
                 </div>
                 <div>
                   <label htmlFor="confirm-new-password">Confirm new password</label>
-                  <input id="confirm-new-password" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={6} required />
+                  <input id="confirm-new-password" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={PASSWORD_MIN_LENGTH} maxLength={PASSWORD_MAX_LENGTH} required />
                 </div>
+                <PasswordRequirements id="reset-password-requirements" password={password} />
                 {error && <p className="alert alert--error">{error}</p>}
                 <button type="submit" disabled={status === "submitting"}>{status === "submitting" ? "Updating password..." : "Update password"}</button>
               </form>

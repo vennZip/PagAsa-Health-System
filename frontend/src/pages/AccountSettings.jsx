@@ -7,6 +7,8 @@ import {
 } from "../utils/notificationSound";
 import MyProfile from "./MyProfile";
 import ThemeSelector from "../components/ThemeSelector";
+import PasswordRequirements from "../components/PasswordRequirements";
+import { isValidPassword, PASSWORD_POLICY_MESSAGE, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "../utils/passwordPolicy";
 
 function AccountSettings() {
   const [soundEnabled, setSoundEnabled] = useState(isNotificationSoundEnabled);
@@ -89,8 +91,8 @@ function AccountSettings() {
     setPasswordError("");
     setPasswordSuccess("");
 
-    if (newPassword.length < 6) {
-      setPasswordError("The new password must contain at least 6 characters.");
+    if (!isValidPassword(newPassword)) {
+      setPasswordError(PASSWORD_POLICY_MESSAGE);
       return;
     }
 
@@ -120,7 +122,7 @@ function AccountSettings() {
       ) {
         setPasswordError("Your current password is incorrect.");
       } else if (code === "auth/weak-password") {
-        setPasswordError("Choose a stronger password with at least 6 characters.");
+        setPasswordError(PASSWORD_POLICY_MESSAGE);
       } else if (code === "auth/requires-recent-login") {
         setPasswordError("Please log out, log in again, and retry the password change.");
       } else if (code === "auth/too-many-requests") {
@@ -252,7 +254,9 @@ function AccountSettings() {
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
               autoComplete="new-password"
-              minLength="6"
+              minLength={PASSWORD_MIN_LENGTH}
+              maxLength={PASSWORD_MAX_LENGTH}
+              aria-describedby="settings-password-requirements"
               required
             />
           </div>
@@ -265,11 +269,13 @@ function AccountSettings() {
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               autoComplete="new-password"
-              minLength="6"
+              minLength={PASSWORD_MIN_LENGTH}
+              maxLength={PASSWORD_MAX_LENGTH}
               required
             />
           </div>
 
+          <PasswordRequirements id="settings-password-requirements" password={newPassword} />
           <button type="submit" disabled={passwordSaving}>
             {passwordSaving ? "Updating Password..." : "Update Password"}
           </button>

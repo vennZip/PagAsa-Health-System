@@ -564,6 +564,12 @@ tbody tr:hover td { background: #fcf6f7; }
   transform: translateY(-50%);
 }
 .password-toggle svg { fill: currentColor; }
+.password-requirements { flex: 1 1 100%; margin: .75rem 0; padding: 0; list-style: none; font-size: .8rem; line-height: 1.65; }
+.password-requirements li { color: var(--pg-muted); }
+.password-requirements li[data-met="true"] { color: #166534; }
+.password-requirement-status { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-theme="dark"] .password-requirements li { color: #c9c9ce; }
+[data-theme="dark"] .password-requirements li[data-met="true"] { color: #86efac; }
 .admin-password-form { display: block; margin: 1rem 0 0; padding: 0; border: 0; box-shadow: none; }
 .admin-password-form > div + div { margin-top: 1rem; }
 .account-password-actions { display: flex; flex-wrap: wrap; gap: .5rem; }

@@ -7,7 +7,7 @@ import ActivityLog from "../models/ActivityLog.js";
 
 const adminId = "507f1f77bcf86cd799439011";
 const targetId = "507f1f77bcf86cd799439012";
-const password = "Example-Password-123!";
+const password = "Example1!";
 const request = (overrides = {}) => ({ user: { id: adminId, role: "admin" }, params: { id: targetId }, body: { password }, ...overrides });
 const response = () => ({
   statusCode: 200, headers: {},
@@ -44,7 +44,7 @@ test("rejects malformed IDs, self changes, and invalid passwords before calling 
   const lookup = context.mock.method(User, "findById", async () => { throw new Error("Invalid lookup"); });
   const handler = createSetUserPassword({ updateUser: async () => { throw new Error("Must not update"); } });
   const cases = [request({ params: { id: "bad-id" } }), request({ params: { id: adminId } })];
-  for (const value of [undefined, null, {}, true, "short", "      ", "x".repeat(129)]) cases.push(request({ body: { password: value } }));
+  for (const value of [undefined, null, {}, true, "Ab1!x", "Ab1!xyz7890", "abcdef1!", "ABCDEF1!", "Abcdefg!", "Abcdef12", "Abcde1 "]) cases.push(request({ body: { password: value } }));
   for (const req of cases) {
     const res = response();
     await handler(req, res);

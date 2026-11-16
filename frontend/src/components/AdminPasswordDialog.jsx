@@ -4,6 +4,8 @@ import { useAuth } from "../context/useAuth";
 import ConfirmDialog from "./ConfirmDialog";
 import { Alert } from "./UI";
 import { Icon } from "./Icons";
+import PasswordRequirements from "./PasswordRequirements";
+import { isValidPassword, PASSWORD_POLICY_MESSAGE, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "../utils/passwordPolicy";
 
 export default function AdminPasswordDialog({ user, onCancel, onSuccess }) {
   const { currentUser } = useAuth();
@@ -17,8 +19,8 @@ export default function AdminPasswordDialog({ user, onCancel, onSuccess }) {
     event.preventDefault();
     if (busy) return;
     setError("");
-    if (password.length < 6 || password.length > 128 || !password.trim()) {
-      setError("Use a password of 6 to 128 characters, with at least one non-space character.");
+    if (!isValidPassword(password)) {
+      setError(PASSWORD_POLICY_MESSAGE);
       return;
     }
     if (password !== confirmation) {
@@ -52,11 +54,11 @@ export default function AdminPasswordDialog({ user, onCancel, onSuccess }) {
       {[["admin-new-password", "New Password", password, setPassword], ["admin-confirm-password", "Confirm New Password", confirmation, setConfirmation]].map(([id, label, value, update]) => <div key={id}>
         <label htmlFor={id}>{label}</label>
         <div className="password-input-wrap">
-          <input id={id} type={showPassword ? "text" : "password"} value={value} onChange={(event) => update(event.target.value)} autoComplete="new-password" minLength={6} maxLength={128} required disabled={busy} aria-describedby="admin-password-help" autoFocus={id === "admin-new-password"} />
+          <input id={id} type={showPassword ? "text" : "password"} value={value} onChange={(event) => update(event.target.value)} autoComplete="new-password" minLength={PASSWORD_MIN_LENGTH} maxLength={PASSWORD_MAX_LENGTH} required disabled={busy} aria-describedby="admin-password-help" autoFocus={id === "admin-new-password"} />
           <button type="button" className="password-toggle" disabled={busy} aria-pressed={showPassword} aria-label={showPassword ? "Hide passwords" : "Show passwords"} onClick={() => setShowPassword((value) => !value)}><Icon name={showPassword ? "eyeOff" : "eye"} size={20} /></button>
         </div>
       </div>)}
-      <small id="admin-password-help">Use 6 to 128 characters.</small>
+      <PasswordRequirements id="admin-password-help" password={password} />
       {error && <div role="alert"><Alert>{error}</Alert></div>}
     </form>
   </ConfirmDialog>;

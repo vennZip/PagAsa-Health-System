@@ -5,6 +5,8 @@ import { Icon } from "../components/Icons";
 import AuthBrandPanel from "../components/AuthBrandPanel";
 import ThemeSelector from "../components/ThemeSelector";
 import { capitalizeName } from "../utils/name";
+import { isValidPassword, PASSWORD_POLICY_MESSAGE, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "../utils/passwordPolicy";
+import PasswordRequirements from "../components/PasswordRequirements";
 
 const S = {
   page: {
@@ -123,6 +125,12 @@ function Register() {
     setError("");
     setSuccess("");
 
+    if (!isValidPassword(formData.password)) {
+      setError(PASSWORD_POLICY_MESSAGE);
+      passwordInputRef.current?.focus();
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
       setFormData((current) => ({
@@ -162,7 +170,7 @@ function Register() {
       } else if (errorCode === "auth/invalid-email") {
         setError("Please enter a valid email address.");
       } else if (errorCode === "auth/weak-password") {
-        setError("Please use a stronger password with at least 6 characters.");
+        setError(PASSWORD_POLICY_MESSAGE);
       } else {
         setError("Unable to create your account. Please try again.");
       }
@@ -233,7 +241,9 @@ function Register() {
                     value={formData.password}
                     onChange={handleChange}
                     autoComplete="new-password"
-                    minLength="6"
+                    minLength={PASSWORD_MIN_LENGTH}
+                    maxLength={PASSWORD_MAX_LENGTH}
+                    aria-describedby="register-password-requirements"
                     required
                   />
                   <button type="button" className="password-toggle" aria-pressed={showPassword} aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)}>
@@ -241,6 +251,8 @@ function Register() {
                   </button>
                 </div>
               </div>
+
+              <PasswordRequirements id="register-password-requirements" password={formData.password} />
 
               <div>
                 <label htmlFor="register-confirm-password">Confirm Password</label>
@@ -252,7 +264,8 @@ function Register() {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     autoComplete="new-password"
-                    minLength="6"
+                    minLength={PASSWORD_MIN_LENGTH}
+                    maxLength={PASSWORD_MAX_LENGTH}
                     required
                   />
                   <button type="button" className="password-toggle" aria-pressed={showConfirmPassword} aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"} onClick={() => setShowConfirmPassword((visible) => !visible)}>

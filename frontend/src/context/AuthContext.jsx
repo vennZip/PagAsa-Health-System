@@ -16,6 +16,7 @@ import {
 
 import { auth } from "../firebase";
 import { capitalizeName } from "../utils/name";
+import { isValidPassword, PASSWORD_POLICY_MESSAGE } from "../utils/passwordPolicy";
 
 // Context and provider intentionally share this module.
 // eslint-disable-next-line react-refresh/only-export-components
@@ -95,6 +96,7 @@ export const AuthProvider = ({ children }) => {
 
   // Register a new patient account
   const register = async (names, email, password, privacyConsent) => {
+    if (!isValidPassword(password)) throw new Error(PASSWORD_POLICY_MESSAGE);
     const normalizedNames = Object.fromEntries(Object.entries(names).map(([key, value]) => [key, key === "suffix" ? value.trim() : capitalizeName(value.trim())]));
     const fullName = ["firstName", "secondName", "middleName", "lastName", "suffix"].map((key) => normalizedNames[key]).filter(Boolean).join(" ");
     registrationInProgress.current = true;
@@ -237,6 +239,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const changePassword = async (currentPassword, newPassword) => {
+    if (!isValidPassword(newPassword)) throw new Error(PASSWORD_POLICY_MESSAGE);
     const firebaseUser = auth.currentUser;
 
     if (!firebaseUser?.email) {
